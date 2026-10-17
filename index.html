@@ -442,6 +442,30 @@
         box-shadow: 0 0 12px rgba(243, 200, 120, 0.18);
       }
 
+      .font-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 28px;
+        color: #c9c3b6;
+        font-size: 12px;
+      }
+
+      .font-select {
+        background: #272521;
+        color: #ecc482;
+        border: 1px solid #544936;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .font-select:focus-visible {
+        outline: 2px solid #ecc482;
+        outline-offset: 3px;
+      }
+
       /* ================= 3. 하단 안내 줄 ================= */
       .footer-hint {
         display: flex;
@@ -579,6 +603,17 @@
               />
             </svg>
           </button>
+        </div>
+
+        <!-- Google Fonts 제공, 두 글꼴 모두 SIL Open Font License 1.1.
+             https://github.com/google/fonts/blob/main/ofl/gowunbatang/OFL.txt
+             https://github.com/google/fonts/blob/main/ofl/nanummyeongjo/OFL.txt -->
+        <div class="font-controls">
+          <label for="fontSelect">종이 글꼴</label>
+          <select id="fontSelect" class="font-select">
+            <option value="Gowun Batang">고운바탕 · 부드럽게</option>
+            <option value="Nanum Myeongjo">나눔명조 · 우아하게</option>
+          </select>
         </div>
 
         <!-- 3. 하단 안내 줄 -->
@@ -1135,6 +1170,15 @@
         });
       }
 
+      const fontSelect = document.getElementById("fontSelect");
+      fontSelect.addEventListener("change", () => {
+        paperSheet.style.fontFamily = `"${fontSelect.value}", serif`;
+        updateScreen();
+      });
+      // 웹폰트가 늦게 도착해도 인쇄선과 램프 위치를 다시 맞춘다.
+      document.fonts.ready.then(() => updateScreen());
+      document.fonts.addEventListener("loadingdone", () => updateScreen());
+
       // 키 하나 처리. 자모, 문장부호, 'BACK', ' ', 'Enter'
       function handleKey(k) {
         if (k === "BACK") {
@@ -1273,6 +1317,8 @@
       };
 
       window.addEventListener("keydown", (e) => {
+        // 글꼴 메뉴의 방향키·Enter·문자 탐색은 종이에 입력하지 않는다.
+        if (e.target === fontSelect) return;
         if (e.metaKey || e.ctrlKey || e.altKey) return;
 
         // Shift·CapsLock·한/영 키 단독 입력은 무시. IME 가 'Process' 로 보내도 e.code 는 살아 있으므로 아래에서 처리한다
