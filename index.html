@@ -102,8 +102,8 @@
         position: absolute;
         top: 0;
         left: 0;
-        width: 26px;
-        height: 26px;
+        width: 18px;
+        height: 18px;
         border: 2px solid rgba(30, 26, 21, 0.8);
         border-radius: 50%;
         transform: translate(-50%, -50%) scale(0.4);
@@ -533,6 +533,7 @@
 
       .font-controls {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: 10px;
         padding: 8px 28px;
@@ -553,6 +554,93 @@
       .font-select:focus-visible {
         outline: 2px solid #ecc482;
         outline-offset: 3px;
+      }
+
+      /* 잉크병: 종이의 활자 크기만 조절한다. */
+      .ink-station {
+        position: absolute;
+        right: 22px;
+        bottom: calc(100% + 18px);
+        z-index: 12;
+      }
+      .ink-bottle-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        width: 64px;
+        padding: 4px;
+        border: 0;
+        background: transparent;
+        color: #dfcfad;
+        cursor: pointer;
+        font: 10px "Gowun Batang", serif;
+        letter-spacing: 0.06em;
+      }
+      .ink-bottle {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 49px;
+        height: 49px;
+        margin-top: 15px;
+        border: 1px solid #78674c;
+        border-radius: 12px 12px 9px 9px;
+        background: linear-gradient(105deg, #535046 0%, #232d2b 17%, #101b1c 55%, #39413a 90%, #151e1c);
+        box-shadow: inset 3px 0 3px #c9b67a33, inset 0 -5px 6px #0008, 3px 5px 8px #0007;
+        transition: transform 0.18s ease;
+      }
+      .ink-bottle::before {
+        content: "";
+        position: absolute;
+        top: -14px;
+        width: 29px;
+        height: 15px;
+        border: 1px solid #76654b;
+        border-radius: 3px 3px 1px 1px;
+        background: repeating-linear-gradient(90deg, #443a2c 0 2px, #65543c 2px 3px);
+        box-shadow: 0 2px 2px #0008;
+      }
+      .ink-bottle-label {
+        width: 33px;
+        padding: 5px 0 4px;
+        border: 1px solid #b3a17e;
+        border-radius: 1px;
+        background: #d6c6a4;
+        color: #40382b;
+        font: 10px "Courier Prime", monospace;
+        letter-spacing: 0.14em;
+        box-shadow: 0 1px 3px #0006;
+      }
+      .ink-bottle-btn:hover .ink-bottle,
+      .ink-bottle-btn[aria-expanded="true"] .ink-bottle {
+        transform: translateY(-3px) rotate(-3deg);
+      }
+      .ink-size-panel {
+        position: absolute;
+        /* 입력선 위에 열어 크기를 바꾸는 동안 현재 글자를 가리지 않는다. */
+        bottom: calc(100% + 12px);
+        right: 76px;
+        width: 200px;
+        padding: 15px 17px;
+        border: 1px solid #78674c;
+        border-radius: 6px;
+        background: #252820;
+        color: #e3d3b1;
+        box-shadow: 0 6px 20px #0006;
+        cursor: default;
+      }
+      .ink-size-heading { display: flex; justify-content: space-between; font-size: 12px; }
+      .ink-size-panel input { width: 100%; margin: 15px 0 8px; accent-color: #c5a466; cursor: ew-resize; }
+      .ink-size-scale { display: flex; justify-content: space-between; color: #b9ad93; font: 11px "Gowun Batang", serif; }
+      .ink-bottle-btn:focus-visible,
+      .ink-size-panel input:focus-visible { outline: 2px solid #e1bd77; outline-offset: 4px; }
+      @media (max-width: 480px) {
+        .ink-station { right: 12px; }
+        .ink-size-panel { width: 180px; right: 68px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .ink-bottle { transition: none; }
       }
 
       /* ================= 3. 하단 안내 줄 ================= */
@@ -621,6 +709,21 @@
 
       <!-- 2. 나이트 램프 레일 & 슬라이더 컨트롤 -->
       <div class="lamp-assembly" id="lampAssembly">
+        <div class="ink-station" id="inkStation">
+          <button type="button" class="ink-bottle-btn" id="inkBottleBtn"
+            aria-label="잉크병: 글자 크기 조절" aria-expanded="false" aria-controls="inkSizePanel">
+            <span class="ink-bottle" aria-hidden="true"><span class="ink-bottle-label">INK</span></span>
+            <span aria-hidden="true">글자 크기</span>
+          </button>
+          <div class="ink-size-panel" id="inkSizePanel" hidden>
+            <div class="ink-size-heading">
+              <label for="inkSizeSlider">활자의 크기</label>
+              <output id="inkSizeValue" for="inkSizeSlider">18px</output>
+            </div>
+            <input id="inkSizeSlider" type="range" min="14" max="28" step="1" value="18" aria-valuetext="18픽셀" />
+            <div class="ink-size-scale" aria-hidden="true"><span>작게</span><span>크게</span></div>
+          </div>
+        </div>
         <div class="lamp-rail">
           <div class="lamp-carriage" id="lampCarriage">
             <div class="lamp-dot"></div>
@@ -704,6 +807,7 @@
             <option value="Gowun Batang">고운바탕 · 부드럽게</option>
             <option value="Nanum Myeongjo">나눔명조 · 우아하게</option>
           </select>
+          <label><input id="impactToggle" type="checkbox" checked /> 잉크 효과</label>
         </div>
 
         <!-- 3. 하단 안내 줄 -->
@@ -1210,6 +1314,7 @@
       const paperViewport = document.getElementById("paperViewport");
       const typeGuide = document.getElementById("typeGuide");
       const typeImpactLayer = document.getElementById("typeImpactLayer");
+      const impactToggle = document.getElementById("impactToggle");
       const charCountEl = document.getElementById("charCount");
       const lineCountEl = document.getElementById("lineCount");
       const reducedMotionQuery = window.matchMedia(
@@ -1226,7 +1331,7 @@
 
       // 입력 위치에서 작게 퍼지는 잉크 임팩트. 모션 감소 설정에서는 생성하지 않는다.
       function triggerTypeImpact() {
-        if (reducedMotionQuery.matches) return;
+        if (reducedMotionQuery.matches || !impactToggle.checked) return;
 
         // 키마다 바로 측정해야 한 프레임 안의 연타도 각자 자리에 찍힌다.
         // 레이어는 종이와 같은 transform 을 따르므로 이동 중이어도 두 사각형의 차이는 종이 기준 좌표다.
@@ -1245,12 +1350,12 @@
         ring.className = "type-impact-ring";
         impact.appendChild(ring);
 
-        for (let index = 0; index < 8; index += 1) {
+        for (let index = 0; index < 4; index += 1) {
           const particle = document.createElement("span");
           particle.className = "type-impact-particle";
           particle.style.setProperty(
             "--angle",
-            `${index * 45 + (Math.random() * 20 - 10)}deg`,
+            `${index * 90 + (Math.random() * 20 - 10)}deg`,
           );
           particle.style.setProperty(
             "--distance",
@@ -1271,6 +1376,9 @@
       const clearTypeImpacts = () => {
         while (typeImpactLayer.firstChild) typeImpactLayer.firstChild.remove();
       };
+      impactToggle.addEventListener("change", () => {
+        if (!impactToggle.checked) clearTypeImpacts();
+      });
       const handleReducedMotionChange = (event) => {
         if (event.matches) clearTypeImpacts();
       };
@@ -1340,7 +1448,6 @@
             committedStr = committedStr.slice(0, -1);
           }
           updateScreen();
-          triggerTypeImpact();
           return;
         }
 
@@ -1349,7 +1456,6 @@
           triggerStrike();
           committedStr += automata.flush() + " ";
           updateScreen();
-          triggerTypeImpact();
           return;
         }
 
@@ -1358,7 +1464,6 @@
           triggerStrike();
           committedStr += automata.flush() + "\n";
           updateScreen();
-          triggerTypeImpact();
           return;
         }
 
@@ -1440,6 +1545,42 @@
         desk.focus();
       });
 
+      // 잉크병 컨트롤은 글 내용과 한글 조합 상태를 바꾸지 않는다.
+      const inkStation = document.getElementById("inkStation");
+      const inkBottleBtn = document.getElementById("inkBottleBtn");
+      const inkSizePanel = document.getElementById("inkSizePanel");
+      const inkSizeSlider = document.getElementById("inkSizeSlider");
+      const inkSizeValue = document.getElementById("inkSizeValue");
+
+      function setInkPanelOpen(open) {
+        inkSizePanel.hidden = !open;
+        inkBottleBtn.setAttribute("aria-expanded", String(open));
+      }
+      inkBottleBtn.addEventListener("click", () => {
+        setInkPanelOpen(inkSizePanel.hidden);
+      });
+      inkSizeSlider.addEventListener("input", () => {
+        const size = Number(inkSizeSlider.value);
+        paperSheet.style.fontSize = `${size}px`;
+        paperSheet.style.lineHeight = `${size * 5 / 3}px`;
+        cursorAnchor.style.height = `${size + 2}px`;
+        inkSizeValue.value = `${size}px`;
+        inkSizeSlider.setAttribute("aria-valuetext", `${size}픽셀`);
+        updateScreen();
+      });
+      document.addEventListener("click", (e) => {
+        if (!inkStation.contains(e.target)) setInkPanelOpen(false);
+      });
+      inkStation.addEventListener("keydown", (e) => {
+        // 스페이스/Enter/방향키를 종이 입력 대신 네이티브 컨트롤에 전달한다.
+        e.stopPropagation();
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setInkPanelOpen(false);
+          inkBottleBtn.focus();
+        }
+      });
+
       /* =========================================================================
    6. 물리 키보드 연동 - 한/영 상태와 무관하게 자판 위치(e.code)로 자모를 정한다
    ========================================================================= */
@@ -1474,7 +1615,7 @@
 
       window.addEventListener("keydown", (e) => {
         // 글꼴 메뉴의 방향키·Enter·문자 탐색은 종이에 입력하지 않는다.
-        if (e.target === fontSelect) return;
+        if (e.target === fontSelect || e.target === impactToggle) return;
         if (e.metaKey || e.ctrlKey || e.altKey) return;
 
         // Shift·CapsLock·한/영 키 단독 입력은 무시. IME 가 'Process' 로 보내도 e.code 는 살아 있으므로 아래에서 처리한다
@@ -1553,6 +1694,7 @@
 
       function startDemo(resetText = false) {
         if (resetText) {
+          clearTypeImpacts();
           automata.reset();
           committedStr = INITIAL_TEXT;
           demoIdx = 0;
