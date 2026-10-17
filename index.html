@@ -81,12 +81,13 @@
         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.55'/%3E%3C/svg%3E");
       }
 
+      /* 조명 위에 그리되 종이와 같은 transform 으로 움직여, 줄바꿈 때도 입력 위치에 붙어 있게 한다 */
       .type-impact-layer {
         position: absolute;
         inset: 0;
-        overflow: hidden;
         pointer-events: none;
         z-index: 5;
+        transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
       }
 
       .type-impact {
@@ -1176,45 +1177,43 @@
       function triggerTypeImpact() {
         if (reducedMotionQuery.matches) return;
 
+        // 키마다 바로 측정해야 한 프레임 안의 연타도 각자 자리에 찍힌다.
+        // 레이어는 종이와 같은 transform 을 따르므로 이동 중이어도 두 사각형의 차이는 종이 기준 좌표다.
         const targetNode = automata.getComposingChar()
           ? composingEl
           : cursorAnchor;
-        requestAnimationFrame(() => {
-          if (reducedMotionQuery.matches) return;
+        const targetRect = targetNode.getBoundingClientRect();
+        const layerRect = typeImpactLayer.getBoundingClientRect();
+        const impact = document.createElement("span");
 
-          const targetRect = targetNode.getBoundingClientRect();
-          const layerRect = typeImpactLayer.getBoundingClientRect();
-          const impact = document.createElement("span");
+        impact.className = "type-impact";
+        impact.style.left = `${targetRect.left - layerRect.left + targetRect.width / 2}px`;
+        impact.style.top = `${targetRect.top - layerRect.top + targetRect.height / 2}px`;
 
-          impact.className = "type-impact";
-          impact.style.left = `${targetRect.left - layerRect.left + targetRect.width / 2}px`;
-          impact.style.top = `${targetRect.top - layerRect.top + targetRect.height / 2}px`;
+        for (let index = 0; index < 4; index += 1) {
+          const particle = document.createElement("span");
+          particle.className = "type-impact-particle";
+          particle.style.setProperty(
+            "--angle",
+            `${index * 90 + (Math.random() * 24 - 12)}deg`,
+          );
+          particle.style.setProperty(
+            "--distance",
+            `${10 + Math.random() * 5}px`,
+          );
+          impact.appendChild(particle);
+        }
 
-          for (let index = 0; index < 4; index += 1) {
-            const particle = document.createElement("span");
-            particle.className = "type-impact-particle";
-            particle.style.setProperty(
-              "--angle",
-              `${index * 90 + (Math.random() * 24 - 12)}deg`,
-            );
-            particle.style.setProperty(
-              "--distance",
-              `${10 + Math.random() * 5}px`,
-            );
-            impact.appendChild(particle);
-          }
-
-          const cleanupImpact = (event) => {
-            if (event.target === impact) impact.remove();
-          };
-          impact.addEventListener("animationend", cleanupImpact, {
-            once: true,
-          });
-          impact.addEventListener("animationcancel", cleanupImpact, {
-            once: true,
-          });
-          typeImpactLayer.appendChild(impact);
+        const cleanupImpact = (event) => {
+          if (event.target === impact) impact.remove();
+        };
+        impact.addEventListener("animationend", cleanupImpact, {
+          once: true,
         });
+        impact.addEventListener("animationcancel", cleanupImpact, {
+          once: true,
+        });
+        typeImpactLayer.appendChild(impact);
       }
 
       const clearTypeImpacts = () => {
@@ -1265,6 +1264,7 @@
           const targetPrintLineY = viewportRect.height - 66;
           const translateY = targetPrintLineY - anchorOffsetTop;
           paperSheet.style.transform = `translateY(${translateY}px)`;
+          typeImpactLayer.style.transform = paperSheet.style.transform;
 
           updateLightingOverlay(clampedX, viewportRect.height);
         });
