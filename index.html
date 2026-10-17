@@ -90,38 +90,48 @@
         transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
       }
 
+      /* 링과 입자를 담는 기준점. 입자가 링의 크기·투명도 변화를 물려받지 않게 분리한다 */
       .type-impact {
         position: absolute;
-        width: 20px;
-        height: 20px;
-        border: 1px solid rgba(236, 196, 130, 0.75);
+        width: 0;
+        height: 0;
+      }
+
+      /* 종이 위 먹 색과 맞춘 잉크 링. 밝은 조명 아래에서도 보이도록 진하게 */
+      .type-impact-ring {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 26px;
+        height: 26px;
+        border: 2px solid rgba(30, 26, 21, 0.8);
         border-radius: 50%;
-        transform: translate(-50%, -50%) scale(0.55);
-        opacity: 0.9;
-        animation: typeImpactPop 260ms ease-out forwards;
+        transform: translate(-50%, -50%) scale(0.4);
+        opacity: 1;
+        animation: typeImpactPop 420ms cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
       }
 
       .type-impact-particle {
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 3px;
-        height: 3px;
+        width: var(--size);
+        height: var(--size);
         border-radius: 50%;
-        background: #ecc482;
-        box-shadow: 0 0 5px rgba(236, 196, 130, 0.7);
+        background: #1e1a15;
         transform: translate(-50%, -50%) rotate(var(--angle)) translateY(0)
           scale(1);
-        animation: typeImpactParticle 260ms ease-out forwards;
+        animation: typeImpactParticle 420ms cubic-bezier(0.2, 0.8, 0.3, 1)
+          forwards;
       }
 
       @keyframes typeImpactPop {
         0% {
-          transform: translate(-50%, -50%) scale(0.55);
-          opacity: 0.9;
+          transform: translate(-50%, -50%) scale(0.4);
+          opacity: 1;
         }
         100% {
-          transform: translate(-50%, -50%) scale(1.45);
+          transform: translate(-50%, -50%) scale(2);
           opacity: 0;
         }
       }
@@ -130,11 +140,14 @@
         0% {
           transform: translate(-50%, -50%) rotate(var(--angle)) translateY(0)
             scale(1);
-          opacity: 0.9;
+          opacity: 1;
+        }
+        60% {
+          opacity: 1;
         }
         100% {
           transform: translate(-50%, -50%) rotate(var(--angle))
-            translateY(var(--distance)) scale(0);
+            translateY(var(--distance)) scale(0.5);
           opacity: 0;
         }
       }
@@ -145,8 +158,11 @@
         }
 
         .type-impact {
-          animation: none;
           display: none;
+        }
+
+        .type-impact-ring {
+          animation: none;
         }
 
         .type-impact-particle {
@@ -1190,27 +1206,28 @@
         impact.style.left = `${targetRect.left - layerRect.left + targetRect.width / 2}px`;
         impact.style.top = `${targetRect.top - layerRect.top + targetRect.height / 2}px`;
 
-        for (let index = 0; index < 4; index += 1) {
+        const ring = document.createElement("span");
+        ring.className = "type-impact-ring";
+        impact.appendChild(ring);
+
+        for (let index = 0; index < 8; index += 1) {
           const particle = document.createElement("span");
           particle.className = "type-impact-particle";
           particle.style.setProperty(
             "--angle",
-            `${index * 90 + (Math.random() * 24 - 12)}deg`,
+            `${index * 45 + (Math.random() * 20 - 10)}deg`,
           );
           particle.style.setProperty(
             "--distance",
-            `${10 + Math.random() * 5}px`,
+            `${18 + Math.random() * 12}px`,
           );
+          particle.style.setProperty("--size", `${4.5 + Math.random() * 3}px`);
           impact.appendChild(particle);
         }
 
-        const cleanupImpact = (event) => {
-          if (event.target === impact) impact.remove();
-        };
-        impact.addEventListener("animationend", cleanupImpact, {
-          once: true,
-        });
-        impact.addEventListener("animationcancel", cleanupImpact, {
+        const cleanupImpact = () => impact.remove();
+        ring.addEventListener("animationend", cleanupImpact, { once: true });
+        ring.addEventListener("animationcancel", cleanupImpact, {
           once: true,
         });
         typeImpactLayer.appendChild(impact);
