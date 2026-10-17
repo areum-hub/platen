@@ -81,6 +81,95 @@
         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.55'/%3E%3C/svg%3E");
       }
 
+      /* 조명 위에 그리되 종이와 같은 transform 으로 움직여, 줄바꿈 때도 입력 위치에 붙어 있게 한다 */
+      .type-impact-layer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 5;
+        transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      /* 링과 입자를 담는 기준점. 입자가 링의 크기·투명도 변화를 물려받지 않게 분리한다 */
+      .type-impact {
+        position: absolute;
+        width: 0;
+        height: 0;
+      }
+
+      /* 종이 위 먹 색과 맞춘 잉크 링. 밝은 조명 아래에서도 보이도록 진하게 */
+      .type-impact-ring {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 26px;
+        height: 26px;
+        border: 2px solid rgba(30, 26, 21, 0.8);
+        border-radius: 50%;
+        transform: translate(-50%, -50%) scale(0.4);
+        opacity: 1;
+        animation: typeImpactPop 420ms cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+      }
+
+      .type-impact-particle {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: var(--size);
+        height: var(--size);
+        border-radius: 50%;
+        background: #1e1a15;
+        transform: translate(-50%, -50%) rotate(var(--angle)) translateY(0)
+          scale(1);
+        animation: typeImpactParticle 420ms cubic-bezier(0.2, 0.8, 0.3, 1)
+          forwards;
+      }
+
+      @keyframes typeImpactPop {
+        0% {
+          transform: translate(-50%, -50%) scale(0.4);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(2);
+          opacity: 0;
+        }
+      }
+
+      @keyframes typeImpactParticle {
+        0% {
+          transform: translate(-50%, -50%) rotate(var(--angle)) translateY(0)
+            scale(1);
+          opacity: 1;
+        }
+        60% {
+          opacity: 1;
+        }
+        100% {
+          transform: translate(-50%, -50%) rotate(var(--angle))
+            translateY(var(--distance)) scale(0.5);
+          opacity: 0;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .type-guide.strike {
+          animation: none;
+        }
+
+        .type-impact {
+          display: none;
+        }
+
+        .type-impact-ring {
+          animation: none;
+        }
+
+        .type-impact-particle {
+          animation: none;
+        }
+      }
+
       /* 실제 인쇄되는 종이 시트 */
       .paper-sheet {
         position: absolute;
@@ -494,6 +583,7 @@
       <!-- 1. 종이 및 타자기 인쇄 영역 -->
       <div class="paper-viewport" id="paperViewport">
         <div class="paper-texture"></div>
+        <div class="type-impact-layer" id="typeImpactLayer" aria-hidden="true"></div>
 
         <!-- 상단 HUD -->
         <div class="top-hud">
@@ -1119,14 +1209,75 @@
       const paperSheet = document.getElementById("paperSheet");
       const paperViewport = document.getElementById("paperViewport");
       const typeGuide = document.getElementById("typeGuide");
+      const typeImpactLayer = document.getElementById("typeImpactLayer");
       const charCountEl = document.getElementById("charCount");
       const lineCountEl = document.getElementById("lineCount");
+      const reducedMotionQuery = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      );
 
       // T자 활자 타격 애니메이션
       function triggerStrike() {
+        if (reducedMotionQuery.matches) return;
         typeGuide.classList.remove("strike");
         void typeGuide.offsetWidth;
         typeGuide.classList.add("strike");
+      }
+
+      // 입력 위치에서 작게 퍼지는 잉크 임팩트. 모션 감소 설정에서는 생성하지 않는다.
+      function triggerTypeImpact() {
+        if (reducedMotionQuery.matches) return;
+
+        // 키마다 바로 측정해야 한 프레임 안의 연타도 각자 자리에 찍힌다.
+        // 레이어는 종이와 같은 transform 을 따르므로 이동 중이어도 두 사각형의 차이는 종이 기준 좌표다.
+        const targetNode = automata.getComposingChar()
+          ? composingEl
+          : cursorAnchor;
+        const targetRect = targetNode.getBoundingClientRect();
+        const layerRect = typeImpactLayer.getBoundingClientRect();
+        const impact = document.createElement("span");
+
+        impact.className = "type-impact";
+        impact.style.left = `${targetRect.left - layerRect.left + targetRect.width / 2}px`;
+        impact.style.top = `${targetRect.top - layerRect.top + targetRect.height / 2}px`;
+
+        const ring = document.createElement("span");
+        ring.className = "type-impact-ring";
+        impact.appendChild(ring);
+
+        for (let index = 0; index < 8; index += 1) {
+          const particle = document.createElement("span");
+          particle.className = "type-impact-particle";
+          particle.style.setProperty(
+            "--angle",
+            `${index * 45 + (Math.random() * 20 - 10)}deg`,
+          );
+          particle.style.setProperty(
+            "--distance",
+            `${18 + Math.random() * 12}px`,
+          );
+          particle.style.setProperty("--size", `${4.5 + Math.random() * 3}px`);
+          impact.appendChild(particle);
+        }
+
+        const cleanupImpact = () => impact.remove();
+        ring.addEventListener("animationend", cleanupImpact, { once: true });
+        ring.addEventListener("animationcancel", cleanupImpact, {
+          once: true,
+        });
+        typeImpactLayer.appendChild(impact);
+      }
+
+      const clearTypeImpacts = () => {
+        while (typeImpactLayer.firstChild) typeImpactLayer.firstChild.remove();
+      };
+      const handleReducedMotionChange = (event) => {
+        if (event.matches) clearTypeImpacts();
+      };
+      if (reducedMotionQuery.addEventListener) {
+        reducedMotionQuery.addEventListener("change", handleReducedMotionChange);
+      } else {
+        reducedMotionQuery.addListener(handleReducedMotionChange);
       }
 
       // 화면 텍스트, T자 가이드와 램프 좌표, 종이 스크롤 갱신
@@ -1165,6 +1316,7 @@
           const targetPrintLineY = viewportRect.height - 66;
           const translateY = targetPrintLineY - anchorOffsetTop;
           paperSheet.style.transform = `translateY(${translateY}px)`;
+          typeImpactLayer.style.transform = paperSheet.style.transform;
 
           updateLightingOverlay(clampedX, viewportRect.height);
         });
@@ -1188,6 +1340,7 @@
             committedStr = committedStr.slice(0, -1);
           }
           updateScreen();
+          triggerTypeImpact();
           return;
         }
 
@@ -1196,6 +1349,7 @@
           triggerStrike();
           committedStr += automata.flush() + " ";
           updateScreen();
+          triggerTypeImpact();
           return;
         }
 
@@ -1204,6 +1358,7 @@
           triggerStrike();
           committedStr += automata.flush() + "\n";
           updateScreen();
+          triggerTypeImpact();
           return;
         }
 
@@ -1215,6 +1370,7 @@
           committedStr += res.committed;
         }
         updateScreen();
+        triggerTypeImpact();
       }
 
       /* =========================================================================
