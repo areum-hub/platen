@@ -1503,17 +1503,18 @@
           200;
         const y = (viewportH || paperViewport.clientHeight) + 6;
 
-        if (!isLampOn) {
-          lightingLayer.style.background = `rgba(10, 10, 9, 0.88)`;
-          return;
-        }
-
         const focus = parseFloat(focusSlider.value);
         const spread = parseFloat(spreadSlider.value);
         const dist = parseFloat(distSlider.value);
 
+        // 램프가 꺼져 있어도 슬라이더 값 표시는 맞춰 둔다
         spreadLabel.textContent = `확산 ${Math.round(spread)}°`;
         distLabel.textContent = `거리 ${Math.round(dist)}%`;
+
+        if (!isLampOn) {
+          lightingLayer.style.background = `rgba(10, 10, 9, 0.88)`;
+          return;
+        }
 
         const radiusX = spread * 2.6;
         const radiusY = dist * 4.2;
@@ -1736,6 +1737,63 @@
         once: true,
       });
       window.addEventListener("resize", () => updateScreen());
+
+      /* =========================================================================
+   8. 내 설정 기억하기 - 글꼴·글자 크기·램프·잉크 효과를 이 브라우저에 남긴다 (글 내용은 저장하지 않는다)
+   ========================================================================= */
+      const SETTINGS_KEY = "platen.settings.v1";
+
+      function saveSettings() {
+        try {
+          localStorage.setItem(
+            SETTINGS_KEY,
+            JSON.stringify({
+              font: fontSelect.value,
+              inkSize: inkSizeSlider.value,
+              focus: focusSlider.value,
+              spread: spreadSlider.value,
+              dist: distSlider.value,
+              lampOn: isLampOn,
+              impact: impactToggle.checked,
+            }),
+          );
+        } catch (e) {}
+      }
+
+      function restoreSettings() {
+        let saved = null;
+        try {
+          saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+        } catch (e) {}
+        if (!saved || typeof saved !== "object") return;
+
+        // 목록에 없는 글꼴 값은 무시한다. 슬라이더는 브라우저가 min~max 로 맞춘다
+        if ([...fontSelect.options].some((o) => o.value === saved.font)) {
+          fontSelect.value = saved.font;
+          fontSelect.dispatchEvent(new Event("change"));
+        }
+        if (saved.inkSize != null) {
+          inkSizeSlider.value = saved.inkSize;
+          inkSizeSlider.dispatchEvent(new Event("input"));
+        }
+        if (saved.focus != null) focusSlider.value = saved.focus;
+        if (saved.spread != null) spreadSlider.value = saved.spread;
+        if (saved.dist != null) distSlider.value = saved.dist;
+        if (typeof saved.impact === "boolean") impactToggle.checked = saved.impact;
+        if (saved.lampOn === false) {
+          isLampOn = false;
+          sunToggleBtn.classList.remove("active");
+          lampAssembly.classList.add("lamp-off");
+        }
+        updateLightingOverlay();
+      }
+
+      // 복원 중에 일으킨 change 가 저장값을 덮지 않게, 복원한 뒤에 저장을 건다
+      restoreSettings();
+      [fontSelect, inkSizeSlider, focusSlider, spreadSlider, distSlider, impactToggle].forEach(
+        (control) => control.addEventListener("change", saveSettings),
+      );
+      sunToggleBtn.addEventListener("click", saveSettings);
 
       // 초기 실행
       updateScreen();
