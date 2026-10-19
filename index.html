@@ -643,7 +643,83 @@
         .ink-bottle { transition: none; }
       }
 
-      /* ================= 3. 하단 안내 줄 ================= */
+      /* 집중 글쓰기 타이머 */
+      .focus-timer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px 14px 24px;
+        background: rgba(24, 23, 20, 0.82);
+        border: 1px solid #2a2822;
+        border-radius: 14px;
+        backdrop-filter: blur(6px);
+      }
+      .focus-timer-title {
+        font-size: 12px;
+        color: #d8cfb8;
+        letter-spacing: 0.04em;
+      }
+      .focus-display {
+        font-family: "Courier Prime", monospace;
+        font-size: 40px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        font-variant-numeric: tabular-nums;
+        color: #f1ede0;
+      }
+      .focus-pills {
+        display: flex;
+        gap: 8px;
+      }
+      .focus-pill {
+        border: 1px solid #3c3a32;
+        background: #1b1a17;
+        color: #b3aa92;
+        border-radius: 999px;
+        padding: 6px 14px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .focus-pill.active {
+        background: #f5be64;
+        border-color: #f5be64;
+        color: #1b1a17;
+        font-weight: 700;
+      }
+      .focus-pill:hover { filter: brightness(1.15); }
+      .focus-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .focus-btn {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 16px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        color: #f1ede0;
+      }
+      .focus-start { background: #4ade80; }
+      .focus-pause { background: #f5be64; }
+      .focus-reset { background: #475569; }
+      .focus-btn:active { transform: scale(0.97); }
+      .focus-message {
+        margin-top: 10px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 13px;
+        min-height: 24px;
+        text-align: center;
+      }
+      .focus-message.done { background: #14532d; color: #4ade80; }
+      .focus-message.running { background: #1e3a2e; color: #38bdf8; }
+
+    </style>
       .footer-hint {
         display: flex;
         justify-content: space-between;
@@ -808,6 +884,22 @@
             <option value="Nanum Myeongjo">나눔명조 · 우아하게</option>
           </select>
           <label><input id="impactToggle" type="checkbox" checked /> 잉크 효과</label>
+        </div>
+
+        <!-- 집중 글쓰기 타이머 (PLATEN 위에 겹치는 작은 보조 패널) -->
+        <div class="focus-timer">
+          <div class="focus-timer-title">집중 글쓰기 타이머</div>
+          <div class="focus-display" id="focusDisplay">05:00</div>
+          <div class="focus-pills">
+            <button class="focus-pill active" data-min="5" id="focusPill5">5분</button>
+            <button class="focus-pill" data-min="10" id="focusPill10">10분</button>
+          </div>
+          <div class="focus-actions">
+            <button class="focus-btn focus-start" id="focusStartBtn">시작</button>
+            <button class="focus-btn focus-pause" id="focusPauseBtn">일시정지</button>
+            <button class="focus-btn focus-reset" id="focusResetBtn">초기화</button>
+          </div>
+          <div class="focus-message" id="focusMessage"></div>
         </div>
 
         <!-- 3. 하단 안내 줄 -->
@@ -1736,6 +1828,143 @@
         once: true,
       });
       window.addEventListener("resize", () => updateScreen());
+
+      /* =========================================================================
+   8. 집중 글쓰기 타이머
+   ========================================================================= */
+      const focusDisplay = document.getElementById("focusDisplay");
+      const focusPill5 = document.getElementById("focusPill5");
+      const focusPill10 = document.getElementById("focusPill10");
+      const focusStartBtn = document.getElementById("focusStartBtn");
+      const focusPauseBtn = document.getElementById("focusPauseBtn");
+      const focusResetBtn = document.getElementById("focusResetBtn");
+      const focusMessage = document.getElementById("focusMessage");
+      const focusPills = [focusPill5, focusPill10];
+
+      const FOCUS_RUN_MS = 5 * 60 * 1000; // 5분
+      const FOCUS_GOAL_MS = 10 * 60 * 1000; // 10분
+      const FOCUS_TICK_MS = 100; // 0.1초마다 화면 갱신
+
+      let focusMode = "5m"; // "5m" 또는 "10m"
+      let focusRemaining = FOCUS_GOAL_MS; // 남은 시간(ms)
+      let focusRunning = false;
+      let focusPaused = false;
+      let focusTimerId = null;
+
+      function focusFormat(ms) {
+        const total = Math.max(0, Math.ceil(ms / 1000));
+        const m = Math.floor(total / 60);
+        const s = total % 60;
+        return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+      }
+
+      function focusSetDisplay() {
+        focusDisplay.textContent = focusFormat(focusRemaining);
+      }
+
+      function focusSetState(isRunning, isPaused) {
+        focusRunning = isRunning;
+        focusPaused = isPaused;
+        focusStartBtn.textContent = isRunning && isPaused ? "계속" : (isRunning ? "일시정지" : "시작");
+        focusPauseBtn.textContent = isPaused ? "계속" : "일시정지";
+        focusDisplay.className = "";
+        if (isPaused) focusDisplay.classList.add("paused");
+        if (!isPaused && isRunning) focusDisplay.classList.remove("paused");
+      }
+
+      function focusShowMessage(text, kind) {
+        focusMessage.textContent = text;
+        focusMessage.className = "focus-message show " + kind;
+      }
+
+      function focusClearMessage() {
+        focusMessage.className = "focus-message";
+      }
+
+      function focusFinish() {
+        clearInterval(focusTimerId);
+        focusTimerId = null;
+        focusRunning = false;
+        focusPaused = false;
+        focusSetState(false, false);
+        focusShowMessage("집중 종료! 쉬었다가 다시 시작해요.", "done");
+        focusDisplay.classList.add("done");
+        focusSetDisplay();
+
+        // 1) 화면으로 알려주기 2) 알림음 3) 탭 제목 바꾸기
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          const ctx = new AudioCtx();
+          const beep = ctx.createOscillator();
+          const gain = ctx.createGain();
+          beep.connect(gain);
+          gain.connect(ctx.destination);
+          beep.frequency.value = 880;
+          beep.type = "sine";
+          gain.gain.value = 0.25;
+          beep.start();
+          beep.stop(ctx.currentTime + 0.5);
+        } catch (e) { /* 소리가 막히면 무시 */ }
+        try {
+          document.title = "집중 종료 🎉";
+          setTimeout(() => { document.title = "집중 글쓰기 타이머"; }, 4000);
+        } catch (e) { /* 제목 변경은 무시 */ }
+      }
+
+      function focusTick() {
+        if (focusPaused) return;
+        if (focusRemaining <= 0) { focusFinish(); return; }
+        focusRemaining -= FOCUS_TICK_MS;
+        focusSetDisplay();
+      }
+
+      function focusStart() {
+        if (focusRunning && focusPaused) {
+          focusPaused = false; // "계속"
+        } else if (!focusRunning) {
+          focusMode = document.querySelector(".focus-pill.active").dataset.min === "5" ? "5m" : "10m";
+          focusRemaining = focusMode === "5m" ? FOCUS_RUN_MS : FOCUS_GOAL_MS;
+          focusSetDisplay();
+          if (focusTimerId) clearInterval(focusTimerId);
+          focusTimerId = setInterval(focusTick, FOCUS_TICK_MS);
+        }
+        focusSetState(true, focusPaused);
+      }
+
+      function focusPause() {
+        if (!focusRunning || focusPaused) return;
+        focusPaused = true;
+        clearInterval(focusTimerId);
+        focusTimerId = null;
+        focusSetState(true, true);
+      }
+
+      function focusReset() {
+        clearInterval(focusTimerId);
+        focusTimerId = null;
+        focusPaused = false;
+        if (focusRunning) focusRunning = false;
+        focusMode = document.querySelector(".focus-pill.active").dataset.min === "5" ? "5m" : "10m";
+        focusRemaining = focusMode === "5m" ? FOCUS_RUN_MS : FOCUS_GOAL_MS;
+        focusSetDisplay();
+        focusClearMessage();
+        focusSetState(false, false);
+      }
+
+      focusStartBtn.addEventListener("click", focusStart);
+      focusPauseBtn.addEventListener("click", focusPause);
+      focusResetBtn.addEventListener("click", focusReset);
+
+      focusPills.forEach((pill) => {
+        pill.addEventListener("click", () => {
+          focusPills.forEach((x) => x.classList.remove("active"));
+          pill.classList.add("active");
+          if (!focusRunning) focusReset(); // 멈추거나 끝난 뒤 시간 선택/변경
+        });
+      });
+
+      focusSetDisplay();
 
       // 초기 실행
       updateScreen();
