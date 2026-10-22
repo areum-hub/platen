@@ -556,6 +556,150 @@
         outline-offset: 3px;
       }
 
+      /* 종이 위 옅은 반복 워터마크. 반복 문구와 자간·각도·투명도를 JS 가 바꾼다.
+         종이의 글자 아래쪽만 덮고 원본 문구·자동 타이핑 글자는 가리지 않는다. */
+      .watermark-layer {
+        position: absolute;
+        top: var(--wm-top, 220px);
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 3;
+        pointer-events: none;
+        overflow: hidden;
+        opacity: var(--wm-opacity, 0.12);
+      }
+
+      .watermark-row {
+        position: absolute;
+        left: -50%;
+        right: -50%;
+        display: flex;
+        justify-content: center;
+        gap: var(--wm-gap, 60px);
+        white-space: nowrap;
+        transform: rotate(var(--wm-angle, -24deg));
+        color: rgba(48, 40, 30, 0.9);
+        font-family: "Courier Prime", monospace;
+        font-size: var(--wm-size, 30px);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+      }
+
+      /* 종이 위 옅은 반복 워터마크 컨트롤 (잉크병 옆) */
+      .wm-station {
+        position: absolute;
+        left: 22px;
+        bottom: calc(100% + 18px);
+        z-index: 12;
+      }
+      .wm-toggle-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        width: 64px;
+        padding: 4px;
+        border: 0;
+        background: transparent;
+        color: #dfcfad;
+        cursor: pointer;
+        font: 10px "Gowun Batang", serif;
+        letter-spacing: 0.06em;
+      }
+      .wm-paper-stack {
+        display: grid;
+        place-items: center;
+        width: 49px;
+        height: 49px;
+        margin-top: 15px;
+        border: 1px solid #78674c;
+        border-radius: 6px;
+        background: linear-gradient(180deg, #d8cdb6 0%, #b9ac90 55%, #cbbc9e 100%);
+        box-shadow: 3px 4px 7px rgba(0, 0, 0, 0.55);
+        position: relative;
+        transition: transform 0.18s ease;
+      }
+      .wm-paper-stack::before,
+      .wm-paper-stack::after {
+        content: "";
+        position: absolute;
+        inset: 4px 8px;
+        border: 1px solid rgba(92, 82, 64, 0.5);
+        border-radius: 4px;
+        background: rgba(216, 205, 182, 0.55);
+      }
+      .wm-paper-stack::before {
+        inset: 7px 12px;
+        border-color: rgba(92, 82, 64, 0.35);
+      }
+      .wm-paper-stack span {
+        position: relative;
+        font: 10px "Courier Prime", monospace;
+        letter-spacing: 0.16em;
+        color: #4d4331;
+      }
+      .wm-toggle-btn:hover .wm-paper-stack,
+      .wm-toggle-btn[aria-expanded="true"] .wm-paper-stack {
+        transform: translateY(-3px) rotate(2deg);
+      }
+      .wm-toggle-btn:focus-visible,
+      .wm-panel input:focus-visible {
+        outline: 2px solid #e1bd77;
+        outline-offset: 4px;
+      }
+      .wm-panel {
+        position: absolute;
+        bottom: calc(100% + 12px);
+        left: 76px;
+        width: 214px;
+        padding: 15px 17px;
+        border: 1px solid #78674c;
+        border-radius: 6px;
+        background: #252820;
+        color: #e3d3b1;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        cursor: default;
+      }
+      .wm-panel[hidden] {
+        display: none;
+      }
+      .wm-panel label {
+        display: block;
+        font-size: 12px;
+        margin: 0 0 4px;
+      }
+      .wm-panel input[type="text"] {
+        width: 100%;
+        margin-top: 5px;
+        padding: 5px 8px;
+        border: 1px solid #544936;
+        border-radius: 5px;
+        background: #1c1b18;
+        color: #e3d3b1;
+        font: inherit;
+        letter-spacing: 0.06em;
+      }
+      .wm-panel input[type="range"] {
+        width: 100%;
+        margin: 6px 0 12px;
+        accent-color: #c5a466;
+        cursor: ew-resize;
+      }
+      .wm-scale {
+        display: flex;
+        justify-content: space-between;
+        color: #b9ad93;
+        font: 11px "Gowun Batang", serif;
+      }
+      @media (max-width: 480px) {
+        .wm-station { left: 12px; }
+        .wm-panel { width: 190px; left: 68px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .wm-paper-stack { transition: none; }
+      }
+
       /* 잉크병: 종이의 활자 크기만 조절한다. */
       .ink-station {
         position: absolute;
@@ -719,6 +863,16 @@
       .focus-message.done { background: #14532d; color: #4ade80; }
       .focus-message.running { background: #1e3a2e; color: #38bdf8; }
 
+      /* 종이 아래 한 줄로 놓이는 워터마크 표시 */
+      .watermark-credit {
+        flex: none;
+        text-align: center;
+        color: #7d786e;
+        font-family: "Courier Prime", monospace;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+      }
+
     </style>
       .footer-hint {
         display: flex;
@@ -748,6 +902,7 @@
       <div class="paper-viewport" id="paperViewport">
         <div class="paper-texture"></div>
         <div class="type-impact-layer" id="typeImpactLayer" aria-hidden="true"></div>
+        <div class="watermark-layer" id="watermarkLayer" aria-hidden="true"></div>
 
         <!-- 상단 HUD -->
         <div class="top-hud">
@@ -785,6 +940,31 @@
 
       <!-- 2. 나이트 램프 레일 & 슬라이더 컨트롤 -->
       <div class="lamp-assembly" id="lampAssembly">
+        <!-- 종이 위 옅은 반복 워터마크 컨트롤 -->
+        <div class="wm-station" id="wmStation">
+          <button type="button" class="wm-toggle-btn" id="wmToggleBtn"
+            aria-label="워터마크: 종이 위 옅은 문구" aria-expanded="false" aria-controls="wmPanel">
+            <span class="wm-paper-stack" aria-hidden="true"><span>WM</span></span>
+            <span aria-hidden="true">워터마크</span>
+          </button>
+          <div class="wm-panel" id="wmPanel" hidden>
+            <label for="wmTextInput">종이에 새길 문구
+              <input id="wmTextInput" type="text" value="Watermark feature by Areum Ko" maxlength="24" autocomplete="off" spellcheck="false" />
+            </label>
+            <label for="wmSizeSlider">크기 <span id="wmSizeValue">30px</span></label>
+            <input id="wmSizeSlider" type="range" min="14" max="60" step="1" value="30" aria-valuetext="30픽셀" />
+            <div class="wm-scale" aria-hidden="true"><span>작게</span><span>크게</span></div>
+            <label for="wmOpacitySlider">옅기 <span id="wmOpacityValue">12%</span></label>
+            <input id="wmOpacitySlider" type="range" min="4" max="40" step="1" value="12" aria-valuetext="12퍼센트" />
+            <div class="wm-scale" aria-hidden="true"><span>옅게</span><span>진하게</span></div>
+            <label for="wmGapSlider">간격 <span id="wmGapValue">60px</span></label>
+            <input id="wmGapSlider" type="range" min="20" max="140" step="2" value="60" aria-valuetext="60픽셀" />
+            <div class="wm-scale" aria-hidden="true"><span>좁게</span><span>넓게</span></div>
+            <label for="wmAngleSlider">각도 <span id="wmAngleValue">-24°</span></label>
+            <input id="wmAngleSlider" type="range" min="-60" max="-5" step="1" value="-24" aria-valuetext="반시계 24도" />
+            <div class="wm-scale" aria-hidden="true"><span>크게</span><span>작게</span></div>
+          </div>
+        </div>
         <div class="ink-station" id="inkStation">
           <button type="button" class="ink-bottle-btn" id="inkBottleBtn"
             aria-label="잉크병: 글자 크기 조절" aria-expanded="false" aria-controls="inkSizePanel">
@@ -912,6 +1092,10 @@
             ><kbd>Enter</kbd> 줄바꿈 &nbsp; <kbd>Backspace</kbd> 지우기 &nbsp;
             <kbd>Shift</kbd> 쌍자음</span
           >
+        </div>
+        <!-- 워터마크 기능 표시: 종이 아래 한 줄. 위 안내 줄과 겹치지 않게 따로 둔다. -->
+        <div class="watermark-credit">
+          Watermark feature by Areum Ko
         </div>
       </div>
     </div>
@@ -1517,6 +1701,8 @@
           const translateY = targetPrintLineY - anchorOffsetTop;
           paperSheet.style.transform = `translateY(${translateY}px)`;
           typeImpactLayer.style.transform = paperSheet.style.transform;
+          // 종이가 밀리면 글자의 아래쪽 가장자리도 밀리므로 워터마크 시작선도 다시 잡는다
+          renderWatermark();
 
           updateLightingOverlay(clampedX, viewportRect.height);
         });
@@ -1672,6 +1858,132 @@
           inkBottleBtn.focus();
         }
       });
+
+      /* =========================================================================
+   5-2. 종이 워터마크: 종이 전체에 옅게 반복되는 문구
+   ========================================================================= */
+      const watermarkLayer = document.getElementById("watermarkLayer");
+      const wmStation = document.getElementById("wmStation");
+      const wmToggleBtn = document.getElementById("wmToggleBtn");
+      const wmPanel = document.getElementById("wmPanel");
+      const wmTextInput = document.getElementById("wmTextInput");
+      const wmSizeSlider = document.getElementById("wmSizeSlider");
+      const wmOpacitySlider = document.getElementById("wmOpacitySlider");
+      const wmGapSlider = document.getElementById("wmGapSlider");
+      const wmAngleSlider = document.getElementById("wmAngleSlider");
+      const wmSizeValue = document.getElementById("wmSizeValue");
+      const wmOpacityValue = document.getElementById("wmOpacityValue");
+      const wmGapValue = document.getElementById("wmGapValue");
+      const wmAngleValue = document.getElementById("wmAngleValue");
+
+      const WM_DEFAULT_TEXT = "Watermark feature by Areum Ko";
+
+      // 종이 폭에 맞춰 문구가 한 줄을 덮도록 같은 문구를 이어 붙인다.
+      function wmRepeatText() {
+        const word = (wmTextInput.value.trim() || WM_DEFAULT_TEXT) + "  ";
+        const approx = word.length * (Number(wmSizeSlider.value) * 0.85 + 10);
+        const count = Math.max(3, Math.ceil(paperViewport.clientWidth / approx) + 2);
+        return word.repeat(count);
+      }
+
+      // 글자가 올라간 곳(원본 문구와 자동 타이핑) 위로는 워터마크를 올리지 않는다.
+      // 종이가 위로 밀리면 마지막 글자의 아래쪽 가장자리도 함께 밀리므로 그것을 시작선으로 쓴다.
+      function wmTopOffset() {
+        const ink = cursorAnchor.getBoundingClientRect();
+        const viewport = paperViewport.getBoundingClientRect();
+        const inkBottom = ink.bottom - viewport.top;
+        return Math.max(0, inkBottom - 24);
+      }
+
+      // 종이 높이만큼 줄을 깔고, 간격은 글자 크기에 따라 넓어지게 한다.
+      function renderWatermark() {
+        const height = paperViewport.clientHeight || 0;
+        const top = wmTopOffset();
+        if (!height) return;
+
+        const size = Number(wmSizeSlider.value);
+        const lineGap = size * 4.2;
+        const visibleHeight = Math.max(0, height - top);
+        const rowCount = Math.ceil(visibleHeight / lineGap) + 2;
+        const frag = document.createDocumentFragment();
+
+        watermarkLayer.style.top = `${top}px`;
+
+        for (let i = 0; i < rowCount; i += 1) {
+          const row = document.createElement("div");
+          row.className = "watermark-row";
+          row.textContent = wmRepeatText();
+          row.style.top = `${i * lineGap - size * 2}px`;
+          frag.appendChild(row);
+        }
+        watermarkLayer.replaceChildren(frag);
+      }
+
+      function applyWatermarkStyle() {
+        const size = Number(wmSizeSlider.value);
+        const opacity = Number(wmOpacitySlider.value);
+        const gap = Number(wmGapSlider.value);
+        const angle = Number(wmAngleSlider.value);
+
+        watermarkLayer.style.setProperty("--wm-size", `${size}px`);
+        watermarkLayer.style.setProperty("--wm-opacity", String(opacity / 100));
+        watermarkLayer.style.setProperty("--wm-gap", `${gap}px`);
+        watermarkLayer.style.setProperty("--wm-angle", `${angle}deg`);
+
+        wmSizeValue.textContent = `${size}px`;
+        wmOpacityValue.textContent = `${opacity}%`;
+        wmGapValue.textContent = `${gap}px`;
+        wmAngleValue.textContent = `${angle}°`;
+
+        wmSizeSlider.setAttribute("aria-valuetext", `${size}픽셀`);
+        wmOpacitySlider.setAttribute("aria-valuetext", `${opacity}퍼센트`);
+        wmGapSlider.setAttribute("aria-valuetext", `${gap}픽셀`);
+        wmAngleSlider.setAttribute(
+          "aria-valuetext",
+          angle === 0 ? "수평" : `${Math.abs(angle)}도 기울임`,
+        );
+      }
+
+      // 워터마크는 타이핑 내용을 바꾸지 않는다. 종이가 밀려도 원본 문구 아래에 깔린다.
+      function updateWatermark() {
+        applyWatermarkStyle();
+        renderWatermark();
+      }
+
+      wmTextInput.addEventListener("input", renderWatermark);
+      wmTextInput.addEventListener("keydown", (e) => {
+        // 패널 안에서 누른 키는 종이에 찍히지 않는다.
+        e.stopPropagation();
+      });
+
+      [wmSizeSlider, wmOpacitySlider, wmGapSlider, wmAngleSlider].forEach(
+        (slider) => {
+          slider.addEventListener("input", updateWatermark);
+          slider.addEventListener("change", () => wmToggleBtn.focus());
+          slider.addEventListener("keydown", (e) => e.stopPropagation());
+        },
+      );
+
+      function setWmPanelOpen(open) {
+        wmPanel.hidden = !open;
+        wmToggleBtn.setAttribute("aria-expanded", String(open));
+      }
+      wmToggleBtn.addEventListener("click", () => {
+        setWmPanelOpen(wmPanel.hidden);
+      });
+      document.addEventListener("click", (e) => {
+        if (!wmStation.contains(e.target)) setWmPanelOpen(false);
+      });
+      wmStation.addEventListener("keydown", (e) => {
+        e.stopPropagation();
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setWmPanelOpen(false);
+          wmToggleBtn.focus();
+        }
+      });
+
+      window.addEventListener("resize", () => renderWatermark());
 
       /* =========================================================================
    6. 물리 키보드 연동 - 한/영 상태와 무관하게 자판 위치(e.code)로 자모를 정한다
@@ -1980,6 +2292,7 @@
 
       // 초기 실행
       updateScreen();
+      updateWatermark();
       desk.focus();
       startDemo(false);
     </script>
