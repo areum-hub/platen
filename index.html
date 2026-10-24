@@ -182,10 +182,28 @@
         line-height: 30px;
         color: #1e1a15;
         letter-spacing: -0.01em;
-        transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
         z-index: 1;
         white-space: pre-wrap;
         word-break: break-all;
+        /* 위로 넘어간 줄은 롤러 너머로 사라지듯 흐려져 상단 HUD 와 겹치지 않는다.
+           --fade-top 은 종이 기준으로 본 화면 맨 위 좌표다 (updateScreen 이 맞춘다). */
+        --paper-fade: linear-gradient(
+          to bottom,
+          transparent calc(var(--fade-top) + 52px),
+          #000 calc(var(--fade-top) + 132px)
+        );
+        -webkit-mask-image: var(--paper-fade);
+        mask-image: var(--paper-fade);
+        transition:
+          transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+          --fade-top 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      /* 종이와 같은 속도로 페이드 위치도 움직이게 길이 값으로 등록한다 */
+      @property --fade-top {
+        syntax: "<length>";
+        inherits: false;
+        initial-value: -9999px;
       }
 
       .ink-text {
@@ -1448,6 +1466,7 @@
           const targetPrintLineY = viewportRect.height - 66;
           const translateY = targetPrintLineY - anchorOffsetTop;
           paperSheet.style.transform = `translateY(${translateY}px)`;
+          paperSheet.style.setProperty("--fade-top", `${-translateY}px`);
           typeImpactLayer.style.transform = paperSheet.style.transform;
 
           updateLightingOverlay(clampedX, viewportRect.height);
