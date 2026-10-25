@@ -140,7 +140,6 @@ start index.html
 | 초기화 | 05:00 으로 돌아가고 쓰던 글은 그대로 남음 |
 | 10분 선택 | 10:00 으로 표시가 바뀜 |
 | 시간 종료 | 00:00, 알림음, 탭 제목이 `집중 종료 ` 로 바뀜 |
-| 기존 기능 | 12개 컨트롤 모두 존재, 콘솔 오류 0건 |
 
 ### 4. 오류 해결
 
@@ -203,18 +202,6 @@ Windows 실행 안내에 `cd C:\Users\areum\git_ws\platen` 처럼 제 작업 폴
 **(13) 보안 검사**
 
 README·`.gitignore`·`.env.example` 을 손보기 전에 저장소 전체에서 API 키·토큰·비밀번호·개인키·이메일 패턴을 검사했습니다. 추적 중인 파일 9개에서 발견된 비밀값은 없었습니다. `.env.example` 의 변수 예시는 모두 주석 처리해 실제 값이 들어가지 않게 했습니다.
-
-### 5. 지금 상태
-
-| 항목 | 상태 |
-| --- | --- |
-| 저장소 | https://github.com/areum-hub/platen (공개) |
-| 데모 | https://areum-hub.github.io/platen/ (GitHub Pages, `main` 자동 배포) |
-| 원본 저장소 | 수정하지 않음. 운영 사이트도 그대로 |
-| 변경 파일 | `index.html`, `README.md`, `.gitignore`, `.env.example` |
-| 라이선스 | MIT, Copyright (c) 2026 Dante Labs — 원본과 동일하게 유지 |
-
-
 
 ## 이 저장소는 수업용입니다
 
