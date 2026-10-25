@@ -84,7 +84,7 @@ cd platen
 
 | 구분 | 주소 | 상태 |
 | --- | --- | --- |
-| 내 저장소 (공개) | https://github.com/areum-hub/platen | 공개 |
+| 내 저장소 (공개) | https://github.com/areum-hub/platen.git | 공개 |
 | 원본 저장소 (공개) | https://github.com/dandacompany/platen | 공개 |
 | 이 기능의 PR (내 저장소) | https://github.com/areum-hub/platen/pull/1 | 열림 |
 | 원본 PR (수업 저장소) | https://github.com/dandacompany/platen/pull/51 | 닫힘 (병합 안 됨) |
