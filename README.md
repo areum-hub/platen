@@ -101,9 +101,7 @@ start index.html
 | --- | --- | --- |
 | **데모 (배포된 사이트)** | **https://areum-hub.github.io/platen/** |
 | 내 저장소 (공개) | https://github.com/areum-hub/platen |
-| 원본 저장소 (공개) | https://github.com/dandacompany/platen 
-
-> **데모 주소는 이 저장소의 `main` 이 GitHub Pages 로 배포된 것입니다.** 타이머 기능이 포함되어 있습니다.
+| 원본 저장소 (공개) | https://github.com/dandacompany/platen |
 
 ## Hermes 와 함께한 작업 기록
 
