@@ -678,6 +678,83 @@
         .ink-bottle { transition: none; }
       }
 
+      /* 자동 타이핑 몰입 타이머: 종이 자리를 빼앗지 않도록 한 줄로 둔다 */
+      .focus-timer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 10px;
+        padding: 4px 24px 8px 24px;
+      }
+      .focus-timer-title {
+        font-size: 12px;
+        color: #d8cfb8;
+        letter-spacing: 0.04em;
+      }
+      .focus-display {
+        font-family: "Courier Prime", monospace;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        font-variant-numeric: tabular-nums;
+        color: #f1ede0;
+      }
+      .focus-display.paused { color: #f5be64; }
+      .focus-display.done { color: #4ade80; }
+      .focus-pills {
+        display: flex;
+        gap: 6px;
+      }
+      .focus-pill {
+        border: 1px solid #3c3a32;
+        background: #1b1a17;
+        color: #b3aa92;
+        border-radius: 999px;
+        padding: 3px 10px;
+        font-size: 12px;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .focus-pill.active {
+        background: #f5be64;
+        border-color: #f5be64;
+        color: #1b1a17;
+        font-weight: 700;
+      }
+      .focus-pill:hover { filter: brightness(1.15); }
+      .focus-actions {
+        display: flex;
+        gap: 6px;
+      }
+      .focus-btn {
+        border: none;
+        border-radius: 8px;
+        padding: 5px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        color: #f1ede0;
+      }
+      .focus-start { background: #4ade80; color: #14261a; }
+      .focus-pause { background: #f5be64; color: #241d0c; }
+      .focus-reset { background: #475569; }
+      .focus-btn:active { transform: scale(0.97); }
+      .focus-btn:disabled { opacity: 0.45; cursor: default; }
+      .focus-btn:focus-visible,
+      .focus-pill:focus-visible {
+        outline: 2px solid #e1bd77;
+        outline-offset: 2px;
+      }
+      .focus-message {
+        font-weight: 700;
+        font-size: 12px;
+        color: #b3aa92;
+      }
+      .focus-message.done { color: #4ade80; }
+      .focus-message.running { color: #38bdf8; }
+
       /* ================= 3. 하단 안내 줄 ================= */
       .footer-hint {
         display: flex;
@@ -855,6 +932,22 @@
           <span class="save-status" id="saveStatus" role="status" aria-live="polite">입력하면 자동 저장</span>
         </div>
         <p class="storage-notice">글은 이 브라우저에만 저장됩니다. 공용 PC에서는 글이 남을 수 있습니다.</p>
+
+        <!-- 자동 타이핑 몰입 타이머 -->
+        <div class="focus-timer">
+          <div class="focus-timer-title">자동 타이핑 몰입 타이머</div>
+          <div class="focus-display" id="focusDisplay">05:00</div>
+          <div class="focus-pills">
+            <button type="button" class="focus-pill active" data-min="5" id="focusPill5">5분</button>
+            <button type="button" class="focus-pill" data-min="10" id="focusPill10">10분</button>
+          </div>
+          <div class="focus-actions">
+            <button type="button" class="focus-btn focus-start" id="focusStartBtn">시작</button>
+            <button type="button" class="focus-btn focus-pause" id="focusPauseBtn">일시정지</button>
+            <button type="button" class="focus-btn focus-reset" id="focusResetBtn">초기화</button>
+          </div>
+          <div class="focus-message" id="focusMessage"></div>
+        </div>
 
         <!-- 3. 하단 안내 줄 -->
         <div class="footer-hint">
@@ -1936,6 +2029,173 @@
         (control) => control.addEventListener("change", saveSettings),
       );
       sunToggleBtn.addEventListener("click", saveSettings);
+
+      /* =========================================================================
+   9. 자동 타이핑 몰입 타이머
+   ========================================================================= */
+      const focusDisplay = document.getElementById("focusDisplay");
+      const focusTimerPanel = document.querySelector(".focus-timer");
+      const focusPills = [
+        document.getElementById("focusPill5"),
+        document.getElementById("focusPill10"),
+      ];
+      const focusStartBtn = document.getElementById("focusStartBtn");
+      const focusPauseBtn = document.getElementById("focusPauseBtn");
+      const focusResetBtn = document.getElementById("focusResetBtn");
+      const focusMessage = document.getElementById("focusMessage");
+
+      const FOCUS_PAGE_TITLE = document.title;
+      const FOCUS_TICK_MS = 200; // 0.2초마다 화면 갱신
+
+      let focusRunning = false;
+      let focusPaused = false;
+      let focusTimerId = null;
+      let focusEndsAt = 0;
+      let focusRemaining = 0;
+
+      function focusSelectedMs() {
+        const active = document.querySelector(".focus-pill.active");
+        const minutes = active && active.dataset.min === "10" ? 10 : 5;
+        return minutes * 60 * 1000;
+      }
+
+      function focusFormat(ms) {
+        const total = Math.max(0, Math.ceil(ms / 1000));
+        const m = Math.floor(total / 60);
+        const s = total % 60;
+        return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+      }
+
+      function focusSetDisplay() {
+        focusDisplay.textContent = focusFormat(focusRemaining);
+      }
+
+      // 버튼 이름은 항상 시작 / 일시정지 / 초기화로 유지하고, 지금 누를 수 없는 것만 잠근다
+      function focusSetState(isRunning, isPaused) {
+        focusRunning = isRunning;
+        focusPaused = isPaused;
+        focusStartBtn.disabled = isRunning && !isPaused;
+        focusPauseBtn.disabled = !isRunning || isPaused;
+        focusResetBtn.disabled = false;
+        focusDisplay.classList.toggle("paused", isRunning && isPaused);
+        focusDisplay.classList.remove("done");
+      }
+
+      function focusShowMessage(text, kind) {
+        focusMessage.textContent = text;
+        focusMessage.className = "focus-message " + (kind || "");
+      }
+
+      function focusClearMessage() {
+        focusMessage.textContent = "";
+        focusMessage.className = "focus-message";
+      }
+
+      function focusStopInterval() {
+        if (focusTimerId) clearInterval(focusTimerId);
+        focusTimerId = null;
+      }
+
+      function focusFinish() {
+        focusStopInterval();
+        focusRemaining = 0;
+        focusSetDisplay();
+        focusSetState(false, false);
+        focusDisplay.classList.add("done");
+        focusShowMessage("집중 종료! 잠깐 쉬었다가 다시 시작해요.", "done");
+
+        // 타이머가 끝나면 자동 타이핑도 멈춘다 (작성한 글은 그대로 둔다)
+        stopDemo();
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          const ctx = new AudioCtx();
+          const beep = ctx.createOscillator();
+          const gain = ctx.createGain();
+          beep.connect(gain);
+          gain.connect(ctx.destination);
+          beep.frequency.value = 880;
+          beep.type = "sine";
+          gain.gain.value = 0.25;
+          beep.start();
+          beep.stop(ctx.currentTime + 0.5);
+        } catch (e) { /* 소리가 막히면 무시 */ }
+        try {
+          document.title = "집중 종료 🎉";
+          setTimeout(() => { document.title = FOCUS_PAGE_TITLE; }, 4000);
+        } catch (e) { /* 제목 변경은 무시 */ }
+      }
+
+      function focusTick() {
+        if (focusPaused) return;
+        // 시계 기준으로 남은 시간을 계산해 오차가 쌓이지 않게 한다
+        focusRemaining = focusEndsAt - Date.now();
+        if (focusRemaining <= 0) { focusFinish(); return; }
+        focusSetDisplay();
+      }
+
+      function focusRunFrom(ms) {
+        focusRemaining = ms;
+        focusEndsAt = Date.now() + ms;
+        focusSetDisplay();
+        focusStopInterval();
+        focusTimerId = setInterval(focusTick, FOCUS_TICK_MS);
+        focusSetState(true, false);
+        focusShowMessage("집중 중이에요. 자동 타이핑을 감상해 보세요.", "running");
+      }
+
+      function focusStart() {
+        if (focusRunning && focusPaused) {
+          // 일시정지에서 다시 시작: 남은 시간과 타이핑 위치를 이어서
+          if (!isDemoRunning) startDemo(false);
+          focusRunFrom(focusRemaining);
+        } else if (!focusRunning) {
+          // 처음 시작: 고른 시간만큼 카운트다운 + 자동 타이핑 시작
+          if (!isDemoRunning) startDemo(false);
+          focusRunFrom(focusSelectedMs());
+        }
+      }
+
+      function focusPause() {
+        if (!focusRunning || focusPaused) return;
+        focusRemaining = Math.max(0, focusEndsAt - Date.now());
+        focusStopInterval();
+        focusSetDisplay();
+        stopDemo(); // 타이머와 자동 타이핑을 함께 멈춘다
+        focusSetState(true, true);
+        focusShowMessage("잠시 멈췄어요. 시작을 누르면 이어집니다.", "running");
+      }
+
+      function focusReset() {
+        const wasRunning = focusRunning;
+        focusStopInterval();
+        focusRemaining = focusSelectedMs();
+        focusSetDisplay();
+        focusClearMessage();
+        focusSetState(false, false);
+        // 초기화는 타이머만 되돌린다. 타이머가 돌고 있었다면 자동 타이핑도 멈춘다 (작성 내용 유지)
+        if (wasRunning) stopDemo();
+      }
+
+      // 타이머 패널 클릭이 종이 영역으로 전파되면 자동 타이핑이 바로 멈추므로 막는다
+      focusTimerPanel.addEventListener("click", (e) => e.stopPropagation());
+
+      focusStartBtn.addEventListener("click", focusStart);
+      focusPauseBtn.addEventListener("click", focusPause);
+      focusResetBtn.addEventListener("click", focusReset);
+
+      focusPills.forEach((pill) => {
+        pill.addEventListener("click", () => {
+          focusPills.forEach((x) => x.classList.remove("active"));
+          pill.classList.add("active");
+          // 시간을 고르면 그 시간으로 표시를 맞춘다 (돌고 있으면 무시)
+          if (!focusRunning) focusReset();
+        });
+      });
+
+      focusSetState(false, false);
+      focusRemaining = focusSelectedMs(); // 기본 5분 선택과 화면 표시를 일치시킨다
+      focusSetDisplay();
 
       // 초기 실행
       const restoredDraft = restoreDraft();
