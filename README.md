@@ -40,60 +40,44 @@ PLATEN은 아날로그 타자기 경험을 제공하는 웹 애플리케이션�
 
 ## 실행 방법 (Windows)
 
-이 프로젝트는 빌드도 설치도 필요 없습니다. `index.html` 한 파일이 전부입니다. 아래에서 편한 방법 하나를 고르세요.
+**1. GitHub 저장소 복제**
 
-먼저 저장소를 내 컴퓨터로 받습니다. PowerShell 을 열고:
+PowerShell 또는 VS Code 터미널을 열고 다음 명령어를 실행합니다.
 
 ```powershell
 git clone https://github.com/areum-hub/platen.git
 cd platen
 ```
 
-Git 이 없다면 https://git-scm.com/download/win 에서 설치하거나, 저장소 페이지의 `Code` → `Download ZIP` 으로 받아 압축을 풀어도 됩니다.
+**2. 로컬 서버 실행**
 
-### 방법 1 — 파일을 두 번 클릭 (가장 간단)
-
-탐색기에서 `index.html` 을 더블클릭하면 기본 브라우저에서 열립니다.
-주소창에 `file:///C:/.../platen/index.html` 형태로 표시되면 정상입니다.
-
-> 이 방법도 대부분의 기능이 동작하지만, 브라우저에 따라 자동 저장(localStorage)이 제한될 수 있습니다. 글이 저장되지 않으면 방법 2를 쓰세요.
-
-### 방법 2 — 로컬 서버로 열기 (권장)
-
-PowerShell 또는 명령 프롬프트(cmd)를 열고, **저장소를 받은 폴더로 이동한 뒤** 아래를 실행합니다.
+Python을 사용하여 로컬 서버를 실행합니다.
 
 ```powershell
 python -m http.server 8000
 ```
 
-그다음 브라우저에서 **http://localhost:8000** 을 엽니다. 서버를 끄려면 그 창에서 `Ctrl + C` 를 누릅니다.
-
-`python` 명령이 없다고 나오면 아래 중 하나를 쓰세요.
+Python 명령어가 실행되지 않으면 다음 명령어를 사용합니다.
 
 ```powershell
 py -m http.server 8000
 ```
 
+**3. 브라우저에서 실행**
+
+Chrome 또는 Edge에서 다음 주소로 접속합니다.
+
+http://localhost:8000/index.html
+
+또는 PowerShell에서 아래 명령어로 브라우저를 실행할 수 있습니다.
+
 ```powershell
-npx serve .
+Start-Process "http://localhost:8000/index.html"
 ```
 
-- `py` 는 Windows 용 Python 런처입니다. Python 을 설치했다면 함께 설치됩니다.
-- Python 이 없다면 https://www.python.org/downloads/windows/ 에서 설치하거나, Microsoft Store 에서 `Python 3` 을 설치합니다. 설치할 때 **Add python.exe to PATH** 를 체크하세요.
-- Node.js 가 있다면 `npx serve .` 도 같은 역할을 합니다. 이 경우 표시되는 주소(예: `http://localhost:3000`)를 그대로 열면 됩니다.
+**4. 서버 종료**
 
-> 폴더를 옮겨 다니지 않으려면, 탐색기에서 저장소 폴더의 빈 곳을 `Shift + 우클릭` → **여기서 PowerShell 창 열기** 를 눌러 바로 그 위치에서 실행하면 됩니다.
-
-### 방법 3 — Git Bash 에서 바로 열기
-
-Git 을 설치했다면 Git Bash 를 열고:
-
-```bash
-cd ~/platen          # 저장소를 받은 위치에 맞게 바꾸세요
-start index.html
-```
-
-`start` 는 Windows 기본 프로그램으로 파일을 엽니다. Git Bash 에서는 `explorer.exe index.html` 도 같게 동작합니다.
+PowerShell에서 `Ctrl + C`를 누르면 로컬 서버가 종료됩니다.
 
 ## 링크
 
