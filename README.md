@@ -97,11 +97,11 @@ start index.html
 
 ## 링크
 
-| 구분 | 주소 | 상태 |
+| 구분 | 주소 | 
 | --- | --- | --- |
-| **데모 (배포된 사이트)** | **https://areum-hub.github.io/platen/** | 운영 중 |
-| 내 저장소 (공개) | https://github.com/areum-hub/platen | 공개 |
-| 원본 저장소 (공개) | https://github.com/dandacompany/platen | 공개 |
+| **데모 (배포된 사이트)** | **https://areum-hub.github.io/platen/** |
+| 내 저장소 (공개) | https://github.com/areum-hub/platen |
+| 원본 저장소 (공개) | https://github.com/dandacompany/platen 
 
 > **데모 주소는 이 저장소의 `main` 이 GitHub Pages 로 배포된 것입니다.** 타이머 기능이 포함되어 있습니다.
 
