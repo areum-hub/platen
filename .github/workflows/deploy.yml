@@ -1,5 +1,7 @@
-# main 에 병합되면 이 사이트가 memo.dante-labs.com 으로 배포된다.
+# main 에 병합되면 이 저장소가 GitHub Pages 로 배포된다.
 # 빌드 단계가 없다. 저장소 루트를 그대로 GitHub Pages 에 올린다.
+# 주의: fork 에서는 CNAME 을 쓰지 않는다. 원본의 CNAME(memo.dante-labs.com)이 남아 있으면
+#       Pages 가 그 도메인을 이 fork 에 붙이려 해서 원본 운영 사이트와 충돌한다.
 name: Deploy to GitHub Pages
 
 on:
