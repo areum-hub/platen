@@ -95,13 +95,6 @@ start index.html
 
 `start` 는 Windows 기본 프로그램으로 파일을 엽니다. Git Bash 에서는 `explorer.exe index.html` 도 같게 동작합니다.
 
-### 인터넷에 배포된 사이트로 바로 보기
-
-설치 없이 결과만 보고 싶다면 https://areum-hub.github.io/platen/ 을 열면 됩니다. 이 주소는 이 저장소의 `main` 이 자동 배포된 것입니다.
-
-환경변수 설정은 필요 없습니다. 자세한 내용은 `.env.example` 을 참고하세요.
-
-
 ## 링크
 
 | 구분 | 주소 | 상태 |
