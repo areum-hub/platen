@@ -97,11 +97,11 @@ start index.html
 
 ## 링크
 
-| 구분 | 주소 | 
-| --- | --- | --- |
-| **데모 (배포된 사이트)** | **https://areum-hub.github.io/platen/** |
-| 내 저장소 (공개) | https://github.com/areum-hub/platen |
-| 원본 저장소 (공개) | https://github.com/dandacompany/platen |
+| 구분 | 주소 |
+|---|---|
+| **실행 데모 (GitHub Pages)** | [PLATEN 자동 타이핑 몰입 타이머](https://areum-hub.github.io/platen/) |
+| **내 GitHub 저장소 (공개)** | [areum-hub/platen](https://github.com/areum-hub/platen) |
+| 원본 GitHub 저장소 (공개) | [dandacompany/platen](https://github.com/dandacompany/platen) |
 
 ## Hermes 와 함께한 작업 기록
 
