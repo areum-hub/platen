@@ -39,61 +39,78 @@ PLATEN은 사용자가 타자를 치지 않아도 글이 저절로 찍히는 앱
 
 ## 실행 방법 (Windows)
 
-이 프로젝트는 빌드도 설치도 필요 없습니다. 아래 세 가지 중 편한 방법을 쓰세요.
+이 프로젝트는 빌드도 설치도 필요 없습니다. `index.html` 한 파일이 전부입니다. 아래에서 편한 방법 하나를 고르세요.
 
-### 방법 1 — 파일을 그냥 두 번 클릭 (가장 간단)
-
-탐색기에서 `index.html` 을 더블클릭하면 기본 브라우저에서 열립니다.
-주소창에 `file:///C:/.../platen/index.html` 형태로 표시되면 정상입니다.
-
-> 이 방법은 대부분의 기능이 그대로 동작하지만, 브라우저에 따라 자동 저장(localStorage)이 파일 단위로 제한될 수 있습니다. 저장이 이상하면 방법 2를 쓰세요.
-
-### 방법 2 — 로컬 서버로 열기 (권장)
-
-PowerShell 또는 명령 프롬프트(cmd)를 열고 이 폴더로 이동한 뒤 실행합니다.
+먼저 저장소를 내 컴퓨터로 받습니다. PowerShell 을 열고:
 
 ```powershell
-cd C:\Users\areum\git_ws\platen
-python -m http.server 8000
-```
-
-그다음 브라우저에서 **http://localhost:8000** 을 엽니다.
-서버를 끄려면 그 창에서 `Ctrl + C` 를 누릅니다.
-
-- Python 이 없다면 Microsoft Store 에서 `Python 3` 을 설치하거나, Node.js 가 있다면 `npx serve .` 를 써도 됩니다.
-- `python` 명령이 안 되면 `py -m http.server 8000` 을 시도해 보세요.
-- Git Bash 를 쓴다면 `python -m http.server 8000` 은 동일하게 동작합니다.
-
-### 방법 3 — Git Bash 에서 바로 열기
-
-```bash
-cd /c/Users/areum/git_ws/platen
-start index.html
-```
-
-### 처음 받는 경우 (clone)
-
-```bash
 git clone https://github.com/areum-hub/platen.git
 cd platen
 ```
 
+Git 이 없다면 https://git-scm.com/download/win 에서 설치하거나, 저장소 페이지의 `Code` → `Download ZIP` 으로 받아 압축을 풀어도 됩니다.
+
+### 방법 1 — 파일을 두 번 클릭 (가장 간단)
+
+탐색기에서 `index.html` 을 더블클릭하면 기본 브라우저에서 열립니다.
+주소창에 `file:///C:/.../platen/index.html` 형태로 표시되면 정상입니다.
+
+> 이 방법도 대부분의 기능이 동작하지만, 브라우저에 따라 자동 저장(localStorage)이 제한될 수 있습니다. 글이 저장되지 않으면 방법 2를 쓰세요.
+
+### 방법 2 — 로컬 서버로 열기 (권장)
+
+PowerShell 또는 명령 프롬프트(cmd)를 열고, **저장소를 받은 폴더로 이동한 뒤** 아래를 실행합니다.
+
+```powershell
+python -m http.server 8000
+```
+
+그다음 브라우저에서 **http://localhost:8000** 을 엽니다. 서버를 끄려면 그 창에서 `Ctrl + C` 를 누릅니다.
+
+`python` 명령이 없다고 나오면 아래 중 하나를 쓰세요.
+
+```powershell
+py -m http.server 8000
+```
+
+```powershell
+npx serve .
+```
+
+- `py` 는 Windows 용 Python 런처입니다. Python 을 설치했다면 함께 설치됩니다.
+- Python 이 없다면 https://www.python.org/downloads/windows/ 에서 설치하거나, Microsoft Store 에서 `Python 3` 을 설치합니다. 설치할 때 **Add python.exe to PATH** 를 체크하세요.
+- Node.js 가 있다면 `npx serve .` 도 같은 역할을 합니다. 이 경우 표시되는 주소(예: `http://localhost:3000`)를 그대로 열면 됩니다.
+
+> 폴더를 옮겨 다니지 않으려면, 탐색기에서 저장소 폴더의 빈 곳을 `Shift + 우클릭` → **여기서 PowerShell 창 열기** 를 눌러 바로 그 위치에서 실행하면 됩니다.
+
+### 방법 3 — Git Bash 에서 바로 열기
+
+Git 을 설치했다면 Git Bash 를 열고:
+
+```bash
+cd ~/platen          # 저장소를 받은 위치에 맞게 바꾸세요
+start index.html
+```
+
+`start` 는 Windows 기본 프로그램으로 파일을 엽니다. Git Bash 에서는 `explorer.exe index.html` 도 같게 동작합니다.
+
+### 인터넷에 배포된 사이트로 바로 보기
+
+설치 없이 결과만 보고 싶다면 https://areum-hub.github.io/platen/ 을 열면 됩니다. 이 주소는 이 저장소의 `main` 이 자동 배포된 것입니다.
+
 환경변수 설정은 필요 없습니다. 자세한 내용은 `.env.example` 을 참고하세요.
+
 
 ## 링크
 
 | 구분 | 주소 | 상태 |
 | --- | --- | --- |
-| **데모 (내 fork 배포)** | **https://areum-hub.github.io/platen/** | 운영 중 |
-| 내 저장소 (공개) | https://github.com/areum-hub/platen.git | 공개 |
+| **데모 (배포된 사이트)** | **https://areum-hub.github.io/platen/** | 운영 중 |
+| 내 저장소 (공개) | https://github.com/areum-hub/platen | 공개 |
 | 원본 저장소 (공개) | https://github.com/dandacompany/platen | 공개 |
-| 이 기능의 PR (내 저장소) | https://github.com/areum-hub/platen/pull/1 | 병합됨 |
-| 원본 PR (수업 저장소) | https://github.com/dandacompany/platen/pull/51 | 닫힘 (병합 안 됨) |
-| 수업 운영 사이트 | https://memo.dante-labs.com | 운영 중 (원본 저장소 배포) |
 
 > **데모 주소는 이 저장소의 `main` 이 GitHub Pages 로 배포된 것입니다.** 타이머 기능이 포함되어 있습니다.
->
-> 위 수업 운영 사이트는 **원본 저장소의 `main`** 이 배포된 것이며, 이 타이머 기능은 포함되어 있지 않습니다. 두 사이트는 서로 독립적입니다.
+
 
 ### 데모에서 확인한 동작
 
