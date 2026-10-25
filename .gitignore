@@ -1,7 +1,27 @@
 .env
 .env.*
+!.env.example
 *.key
 *.pem
 .hermes/
 .DS_Store
 node_modules/
+
+# OS·에디터 임시 파일
+Thumbs.db
+desktop.ini
+*.swp
+*~
+.vscode/
+.idea/
+
+# 로그·임시 산출물·병합 잔여물
+*.log
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+.cache/
+tmp/
+
