@@ -182,10 +182,28 @@
         line-height: 30px;
         color: #1e1a15;
         letter-spacing: -0.01em;
-        transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
         z-index: 1;
         white-space: pre-wrap;
         word-break: break-all;
+        /* 위로 넘어간 줄은 롤러 너머로 사라지듯 흐려져 상단 HUD 와 겹치지 않는다.
+           --fade-top 은 종이 기준으로 본 화면 맨 위 좌표다 (updateScreen 이 맞춘다). */
+        --paper-fade: linear-gradient(
+          to bottom,
+          transparent calc(var(--fade-top) + 52px),
+          #000 calc(var(--fade-top) + 132px)
+        );
+        -webkit-mask-image: var(--paper-fade);
+        mask-image: var(--paper-fade);
+        transition:
+          transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+          --fade-top 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      /* 종이와 같은 속도로 페이드 위치도 움직이게 길이 값으로 등록한다 */
+      @property --fade-top {
+        syntax: "<length>";
+        inherits: false;
+        initial-value: -9999px;
       }
 
       .ink-text {
@@ -264,6 +282,7 @@
         border: 1px solid rgba(212, 162, 89, 0.5);
         color: #ecc482;
         cursor: pointer;
+        font-family: inherit;
         font-weight: 500;
       }
       .demo-badge:hover {
@@ -551,7 +570,23 @@
         cursor: pointer;
       }
 
+      .save-status { color: #c9c3b6; font-size: 11px; }
+      .storage-notice {
+        padding: 0 28px 4px;
+        color: #9e998e;
+        font-size: 11px;
+      }
+
       .font-select:focus-visible {
+        outline: 2px solid #ecc482;
+        outline-offset: 3px;
+      }
+
+      /* Tab 으로 버튼·슬라이더에 왔을 때 어디에 있는지 보이게 한다 */
+      .hud-btn:focus-visible,
+      .demo-badge:focus-visible,
+      .sun-toggle-btn:focus-visible,
+      .ruler-input:focus-visible {
         outline: 2px solid #ecc482;
         outline-offset: 3px;
       }
@@ -643,6 +678,83 @@
         .ink-bottle { transition: none; }
       }
 
+      /* 자동 타이핑 몰입 타이머: 종이 자리를 빼앗지 않도록 한 줄로 둔다 */
+      .focus-timer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 10px;
+        padding: 4px 24px 8px 24px;
+      }
+      .focus-timer-title {
+        font-size: 12px;
+        color: #d8cfb8;
+        letter-spacing: 0.04em;
+      }
+      .focus-display {
+        font-family: "Courier Prime", monospace;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        font-variant-numeric: tabular-nums;
+        color: #f1ede0;
+      }
+      .focus-display.paused { color: #f5be64; }
+      .focus-display.done { color: #4ade80; }
+      .focus-pills {
+        display: flex;
+        gap: 6px;
+      }
+      .focus-pill {
+        border: 1px solid #3c3a32;
+        background: #1b1a17;
+        color: #b3aa92;
+        border-radius: 999px;
+        padding: 3px 10px;
+        font-size: 12px;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .focus-pill.active {
+        background: #f5be64;
+        border-color: #f5be64;
+        color: #1b1a17;
+        font-weight: 700;
+      }
+      .focus-pill:hover { filter: brightness(1.15); }
+      .focus-actions {
+        display: flex;
+        gap: 6px;
+      }
+      .focus-btn {
+        border: none;
+        border-radius: 8px;
+        padding: 5px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        color: #f1ede0;
+      }
+      .focus-start { background: #4ade80; color: #14261a; }
+      .focus-pause { background: #f5be64; color: #241d0c; }
+      .focus-reset { background: #475569; }
+      .focus-btn:active { transform: scale(0.97); }
+      .focus-btn:disabled { opacity: 0.45; cursor: default; }
+      .focus-btn:focus-visible,
+      .focus-pill:focus-visible {
+        outline: 2px solid #e1bd77;
+        outline-offset: 2px;
+      }
+      .focus-message {
+        font-weight: 700;
+        font-size: 12px;
+        color: #b3aa92;
+      }
+      .focus-message.done { color: #4ade80; }
+      .focus-message.running { color: #38bdf8; }
+
       /* ================= 3. 하단 안내 줄 ================= */
       .footer-hint {
         display: flex;
@@ -676,13 +788,22 @@
         <!-- 상단 HUD -->
         <div class="top-hud">
           <div class="hud-left">
-            <button class="hud-btn" id="clearBtn" title="처음 상태로 리셋">
+            <button type="button" class="hud-btn" id="clearBtn" title="처음 상태로 리셋">
               ←
+            </button>
+            <button
+              type="button"
+              class="hud-btn"
+              id="downloadBtn"
+              title="작성한 글 다운로드"
+              aria-label="작성한 글을 UTF-8 텍스트 파일로 다운로드"
+            >
+              ↓
             </button>
             <span class="wordmark">Platen</span>
           </div>
           <div class="hud-right">
-            <span class="demo-badge" id="demoToggleBtn">자동 타이핑 중 ⏸</span>
+            <button type="button" class="demo-badge" id="demoToggleBtn">자동 타이핑 중 ⏸</button>
             <div class="char-counter">
               <span id="charCount">151</span> / 3,000 · <span id="lineCount">14</span>줄
             </div>
@@ -808,6 +929,24 @@
             <option value="Nanum Myeongjo">나눔명조 · 우아하게</option>
           </select>
           <label><input id="impactToggle" type="checkbox" checked /> 잉크 효과</label>
+          <span class="save-status" id="saveStatus" role="status" aria-live="polite">입력하면 자동 저장</span>
+        </div>
+        <p class="storage-notice">글은 이 브라우저에만 저장됩니다. 공용 PC에서는 글이 남을 수 있습니다.</p>
+
+        <!-- 자동 타이핑 몰입 타이머 -->
+        <div class="focus-timer">
+          <div class="focus-timer-title">자동 타이핑 몰입 타이머</div>
+          <div class="focus-display" id="focusDisplay">05:00</div>
+          <div class="focus-pills">
+            <button type="button" class="focus-pill active" data-min="5" id="focusPill5">5분</button>
+            <button type="button" class="focus-pill" data-min="10" id="focusPill10">10분</button>
+          </div>
+          <div class="focus-actions">
+            <button type="button" class="focus-btn focus-start" id="focusStartBtn">시작</button>
+            <button type="button" class="focus-btn focus-pause" id="focusPauseBtn">일시정지</button>
+            <button type="button" class="focus-btn focus-reset" id="focusResetBtn">초기화</button>
+          </div>
+          <div class="focus-message" id="focusMessage"></div>
         </div>
 
         <!-- 3. 하단 안내 줄 -->
@@ -1087,6 +1226,11 @@
           if (isConsonant) {
             if (!this.cho && !this.jung) {
               this.cho = ch;
+            } else if (!this.cho && this.jung) {
+              // 홀로 선 모음(ㅏ, ㅘ 등) 뒤의 자음은 모음을 확정하고 새 글자의 초성이 된다
+              committed = this.jung;
+              this.jung = "";
+              this.cho = ch;
             } else if (this.cho && !this.jung) {
               committed = this.cho;
               this.cho = ch;
@@ -1306,6 +1450,52 @@
       const automata = new HangulAutomata();
       let committedStr = INITIAL_TEXT;
 
+      const DRAFT_KEY = "platen.draft.v1";
+      const saveStatus = document.getElementById("saveStatus");
+      let hasSavedDraft = false;
+
+      // 조합 상태도 보관해 복원 후 마지막 한글을 이어서 입력할 수 있다.
+      function saveDraft() {
+        try {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify({
+            version: 1,
+            committed: committedStr,
+            cho: automata.cho,
+            jung: automata.jung,
+            jong: automata.jong,
+          }));
+          hasSavedDraft = true;
+          saveStatus.textContent = "저장됨 · 이 브라우저";
+        } catch (error) {
+          saveStatus.textContent = "자동 저장 불가 · 창을 닫기 전 글을 보관하세요";
+        }
+      }
+
+      function restoreDraft() {
+        try {
+          const raw = localStorage.getItem(DRAFT_KEY);
+          if (raw === null) return false;
+          const draft = JSON.parse(raw);
+          if (!draft || draft.version !== 1 || typeof draft.committed !== "string" ||
+              !["", ...CHO].includes(draft.cho) ||
+              !["", ...JUNG].includes(draft.jung) ||
+              !JONG.includes(draft.jong) ||
+              (draft.jong && (!draft.cho || !draft.jung))) {
+            throw new Error("Invalid draft");
+          }
+          committedStr = draft.committed;
+          automata.cho = draft.cho;
+          automata.jung = draft.jung;
+          automata.jong = draft.jong;
+          hasSavedDraft = true;
+          saveStatus.textContent = "복원됨 · 이 브라우저";
+          return true;
+        } catch (error) {
+          saveStatus.textContent = "저장 글 불러오기 불가 · 새 입력 시 저장을 다시 시도합니다";
+          return false;
+        }
+      }
+
       const desk = document.getElementById("desk");
       const committedEl = document.getElementById("committedText");
       const composingEl = document.getElementById("composingText");
@@ -1424,6 +1614,7 @@
           const targetPrintLineY = viewportRect.height - 66;
           const translateY = targetPrintLineY - anchorOffsetTop;
           paperSheet.style.transform = `translateY(${translateY}px)`;
+          paperSheet.style.setProperty("--fade-top", `${-translateY}px`);
           typeImpactLayer.style.transform = paperSheet.style.transform;
 
           updateLightingOverlay(clampedX, viewportRect.height);
@@ -1440,42 +1631,47 @@
       document.fonts.addEventListener("loadingdone", () => updateScreen());
 
       // 키 하나 처리. 자모, 문장부호, 'BACK', ' ', 'Enter'
-      function handleKey(k) {
-        if (k === "BACK") {
+      function handleKey(k, persist = true) {
+        try {
+          if (k === "BACK") {
+            sound.playKeyClick(false);
+            triggerStrike();
+            if (!automata.backspace()) {
+              committedStr = committedStr.slice(0, -1);
+            }
+            updateScreen();
+            return;
+          }
+
+          if (k === " ") {
+            sound.playKeyClick(true);
+            triggerStrike();
+            committedStr += automata.flush() + " ";
+            updateScreen();
+            return;
+          }
+
+          if (k === "Enter") {
+            sound.playReturnBell();
+            triggerStrike();
+            committedStr += automata.flush() + "\n";
+            updateScreen();
+            return;
+          }
+
           sound.playKeyClick(false);
           triggerStrike();
-          if (!automata.backspace()) {
-            committedStr = committedStr.slice(0, -1);
+
+          const res = automata.inputJamo(k);
+          if (res.committed) {
+            committedStr += res.committed;
           }
           updateScreen();
-          return;
+          triggerTypeImpact();
+        } finally {
+          // 사용자 입력만 동기 저장해 즉시 새로고침해도 남긴다.
+          if (persist) saveDraft();
         }
-
-        if (k === " ") {
-          sound.playKeyClick(true);
-          triggerStrike();
-          committedStr += automata.flush() + " ";
-          updateScreen();
-          return;
-        }
-
-        if (k === "Enter") {
-          sound.playReturnBell();
-          triggerStrike();
-          committedStr += automata.flush() + "\n";
-          updateScreen();
-          return;
-        }
-
-        sound.playKeyClick(false);
-        triggerStrike();
-
-        const res = automata.inputJamo(k);
-        if (res.committed) {
-          committedStr += res.committed;
-        }
-        updateScreen();
-        triggerTypeImpact();
       }
 
       /* =========================================================================
@@ -1503,17 +1699,18 @@
           200;
         const y = (viewportH || paperViewport.clientHeight) + 6;
 
-        if (!isLampOn) {
-          lightingLayer.style.background = `rgba(10, 10, 9, 0.88)`;
-          return;
-        }
-
         const focus = parseFloat(focusSlider.value);
         const spread = parseFloat(spreadSlider.value);
         const dist = parseFloat(distSlider.value);
 
+        // 램프가 꺼져 있어도 슬라이더 값 표시는 맞춰 둔다
         spreadLabel.textContent = `확산 ${Math.round(spread)}°`;
         distLabel.textContent = `거리 ${Math.round(dist)}%`;
+
+        if (!isLampOn) {
+          lightingLayer.style.background = `rgba(10, 10, 9, 0.88)`;
+          return;
+        }
 
         const radiusX = spread * 2.6;
         const radiusY = dist * 4.2;
@@ -1618,6 +1815,14 @@
         if (e.target === fontSelect || e.target === impactToggle) return;
         if (e.metaKey || e.ctrlKey || e.altKey) return;
 
+        // 버튼에 포커스가 있을 때 Space·Enter 는 종이 대신 버튼을 누른다
+        if (
+          e.target.closest &&
+          e.target.closest("button") &&
+          (e.key === " " || e.key === "Enter")
+        )
+          return;
+
         // Shift·CapsLock·한/영 키 단독 입력은 무시. IME 가 'Process' 로 보내도 e.code 는 살아 있으므로 아래에서 처리한다
         if (e.key === "Shift" || e.key === "CapsLock" || e.key === "HangulMode")
           return;
@@ -1676,7 +1881,7 @@
         }
 
         const key = DEMO_SEQUENCE[demoIdx++];
-        handleKey(key);
+        handleKey(key, false);
 
         let delay = 145 + Math.random() * 70;
         if (key === "Enter") delay = 420;
@@ -1694,11 +1899,13 @@
 
       function startDemo(resetText = false) {
         if (resetText) {
+          if (hasSavedDraft && !window.confirm("저장된 글을 지우고 처음 상태로 돌아갈까요?")) return;
           clearTypeImpacts();
           automata.reset();
           committedStr = INITIAL_TEXT;
           demoIdx = 0;
           updateScreen();
+          if (hasSavedDraft) saveDraft();
         }
         isDemoRunning = true;
         demoToggleBtn.textContent = "자동 타이핑 중 ⏸";
@@ -1718,10 +1925,31 @@
         desk.focus();
       });
 
-      document.getElementById("clearBtn").addEventListener("click", () => {
+      document.getElementById("clearBtn").addEventListener("click", (e) => {
+        // 리셋 버튼은 종이 영역 안에 있어서, 막지 않으면 아래 종이 클릭이 데모를 바로 멈춘다
+        // 대신 문서 클릭으로 닫히던 잉크병 패널은 여기서 직접 닫는다
+        e.stopPropagation();
+        setInkPanelOpen(false);
         sound.init();
         stopDemo();
         startDemo(true);
+        desk.focus();
+      });
+
+      document.getElementById("downloadBtn").addEventListener("click", () => {
+        stopDemo();
+        const text = committedStr + automata.getComposingChar();
+        const file = new Blob(["\uFEFF", text], {
+          type: "text/plain;charset=utf-8",
+        });
+        const url = URL.createObjectURL(file);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "platen.txt";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
         desk.focus();
       });
 
@@ -1737,10 +1965,244 @@
       });
       window.addEventListener("resize", () => updateScreen());
 
+      /* =========================================================================
+   8. 내 설정 기억하기 - 글꼴·글자 크기·램프·잉크 효과를 이 브라우저에 남긴다 (글 내용은 저장하지 않는다)
+   ========================================================================= */
+      const SETTINGS_KEY = "platen.settings.v1";
+
+      function saveSettings() {
+        try {
+          localStorage.setItem(
+            SETTINGS_KEY,
+            JSON.stringify({
+              font: fontSelect.value,
+              inkSize: inkSizeSlider.value,
+              focus: focusSlider.value,
+              spread: spreadSlider.value,
+              dist: distSlider.value,
+              lampOn: isLampOn,
+              impact: impactToggle.checked,
+            }),
+          );
+        } catch (e) {}
+      }
+
+      function restoreSettings() {
+        let saved = null;
+        try {
+          saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+        } catch (e) {}
+        if (!saved || typeof saved !== "object") return;
+
+        // 목록에 없는 글꼴, 숫자가 아니거나 min~max 밖인 슬라이더 값은 무시하고 기본값을 둔다
+        // (그대로 넣으면 브라우저가 슬라이더 가운데 값으로 바꿔 버린다)
+        const restoreRange = (slider, value) => {
+          const n = Number(value);
+          if (value === "" || value == null || !Number.isFinite(n)) return false;
+          if (n < Number(slider.min) || n > Number(slider.max)) return false;
+          slider.value = String(n);
+          return true;
+        };
+
+        if ([...fontSelect.options].some((o) => o.value === saved.font)) {
+          fontSelect.value = saved.font;
+          fontSelect.dispatchEvent(new Event("change"));
+        }
+        if (restoreRange(inkSizeSlider, saved.inkSize)) {
+          inkSizeSlider.dispatchEvent(new Event("input"));
+        }
+        restoreRange(focusSlider, saved.focus);
+        restoreRange(spreadSlider, saved.spread);
+        restoreRange(distSlider, saved.dist);
+        if (typeof saved.impact === "boolean") impactToggle.checked = saved.impact;
+        if (saved.lampOn === false) {
+          isLampOn = false;
+          sunToggleBtn.classList.remove("active");
+          lampAssembly.classList.add("lamp-off");
+        }
+        updateLightingOverlay();
+      }
+
+      // 복원 중에 일으킨 change 가 저장값을 덮지 않게, 복원한 뒤에 저장을 건다
+      restoreSettings();
+      [fontSelect, inkSizeSlider, focusSlider, spreadSlider, distSlider, impactToggle].forEach(
+        (control) => control.addEventListener("change", saveSettings),
+      );
+      sunToggleBtn.addEventListener("click", saveSettings);
+
+      /* =========================================================================
+   9. 자동 타이핑 몰입 타이머
+   ========================================================================= */
+      const focusDisplay = document.getElementById("focusDisplay");
+      const focusTimerPanel = document.querySelector(".focus-timer");
+      const focusPills = [
+        document.getElementById("focusPill5"),
+        document.getElementById("focusPill10"),
+      ];
+      const focusStartBtn = document.getElementById("focusStartBtn");
+      const focusPauseBtn = document.getElementById("focusPauseBtn");
+      const focusResetBtn = document.getElementById("focusResetBtn");
+      const focusMessage = document.getElementById("focusMessage");
+
+      const FOCUS_PAGE_TITLE = document.title;
+      const FOCUS_TICK_MS = 200; // 0.2초마다 화면 갱신
+
+      let focusRunning = false;
+      let focusPaused = false;
+      let focusTimerId = null;
+      let focusEndsAt = 0;
+      let focusRemaining = 0;
+
+      function focusSelectedMs() {
+        const active = document.querySelector(".focus-pill.active");
+        const minutes = active && active.dataset.min === "10" ? 10 : 5;
+        return minutes * 60 * 1000;
+      }
+
+      function focusFormat(ms) {
+        const total = Math.max(0, Math.ceil(ms / 1000));
+        const m = Math.floor(total / 60);
+        const s = total % 60;
+        return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+      }
+
+      function focusSetDisplay() {
+        focusDisplay.textContent = focusFormat(focusRemaining);
+      }
+
+      // 버튼 이름은 항상 시작 / 일시정지 / 초기화로 유지하고, 지금 누를 수 없는 것만 잠근다
+      function focusSetState(isRunning, isPaused) {
+        focusRunning = isRunning;
+        focusPaused = isPaused;
+        focusStartBtn.disabled = isRunning && !isPaused;
+        focusPauseBtn.disabled = !isRunning || isPaused;
+        focusResetBtn.disabled = false;
+        focusDisplay.classList.toggle("paused", isRunning && isPaused);
+        focusDisplay.classList.remove("done");
+      }
+
+      function focusShowMessage(text, kind) {
+        focusMessage.textContent = text;
+        focusMessage.className = "focus-message " + (kind || "");
+      }
+
+      function focusClearMessage() {
+        focusMessage.textContent = "";
+        focusMessage.className = "focus-message";
+      }
+
+      function focusStopInterval() {
+        if (focusTimerId) clearInterval(focusTimerId);
+        focusTimerId = null;
+      }
+
+      function focusFinish() {
+        focusStopInterval();
+        focusRemaining = 0;
+        focusSetDisplay();
+        focusSetState(false, false);
+        focusDisplay.classList.add("done");
+        focusShowMessage("집중 종료! 잠깐 쉬었다가 다시 시작해요.", "done");
+
+        // 타이머가 끝나면 자동 타이핑도 멈춘다 (작성한 글은 그대로 둔다)
+        stopDemo();
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          const ctx = new AudioCtx();
+          const beep = ctx.createOscillator();
+          const gain = ctx.createGain();
+          beep.connect(gain);
+          gain.connect(ctx.destination);
+          beep.frequency.value = 880;
+          beep.type = "sine";
+          gain.gain.value = 0.25;
+          beep.start();
+          beep.stop(ctx.currentTime + 0.5);
+        } catch (e) { /* 소리가 막히면 무시 */ }
+        try {
+          document.title = "집중 종료 🎉";
+          setTimeout(() => { document.title = FOCUS_PAGE_TITLE; }, 4000);
+        } catch (e) { /* 제목 변경은 무시 */ }
+      }
+
+      function focusTick() {
+        if (focusPaused) return;
+        // 시계 기준으로 남은 시간을 계산해 오차가 쌓이지 않게 한다
+        focusRemaining = focusEndsAt - Date.now();
+        if (focusRemaining <= 0) { focusFinish(); return; }
+        focusSetDisplay();
+      }
+
+      function focusRunFrom(ms) {
+        focusRemaining = ms;
+        focusEndsAt = Date.now() + ms;
+        focusSetDisplay();
+        focusStopInterval();
+        focusTimerId = setInterval(focusTick, FOCUS_TICK_MS);
+        focusSetState(true, false);
+        focusShowMessage("집중 중이에요. 자동 타이핑을 감상해 보세요.", "running");
+      }
+
+      function focusStart() {
+        if (focusRunning && focusPaused) {
+          // 일시정지에서 다시 시작: 남은 시간과 타이핑 위치를 이어서
+          if (!isDemoRunning) startDemo(false);
+          focusRunFrom(focusRemaining);
+        } else if (!focusRunning) {
+          // 처음 시작: 고른 시간만큼 카운트다운 + 자동 타이핑 시작
+          if (!isDemoRunning) startDemo(false);
+          focusRunFrom(focusSelectedMs());
+        }
+      }
+
+      function focusPause() {
+        if (!focusRunning || focusPaused) return;
+        focusRemaining = Math.max(0, focusEndsAt - Date.now());
+        focusStopInterval();
+        focusSetDisplay();
+        stopDemo(); // 타이머와 자동 타이핑을 함께 멈춘다
+        focusSetState(true, true);
+        focusShowMessage("잠시 멈췄어요. 시작을 누르면 이어집니다.", "running");
+      }
+
+      function focusReset() {
+        const wasRunning = focusRunning;
+        focusStopInterval();
+        focusRemaining = focusSelectedMs();
+        focusSetDisplay();
+        focusClearMessage();
+        focusSetState(false, false);
+        // 초기화는 타이머만 되돌린다. 타이머가 돌고 있었다면 자동 타이핑도 멈춘다 (작성 내용 유지)
+        if (wasRunning) stopDemo();
+      }
+
+      // 타이머 패널 클릭이 종이 영역으로 전파되면 자동 타이핑이 바로 멈추므로 막는다
+      focusTimerPanel.addEventListener("click", (e) => e.stopPropagation());
+
+      focusStartBtn.addEventListener("click", focusStart);
+      focusPauseBtn.addEventListener("click", focusPause);
+      focusResetBtn.addEventListener("click", focusReset);
+
+      focusPills.forEach((pill) => {
+        pill.addEventListener("click", () => {
+          focusPills.forEach((x) => x.classList.remove("active"));
+          pill.classList.add("active");
+          // 시간을 고르면 그 시간으로 표시를 맞춘다 (돌고 있으면 무시)
+          if (!focusRunning) focusReset();
+        });
+      });
+
+      focusSetState(false, false);
+      focusRemaining = focusSelectedMs(); // 기본 5분 선택과 화면 표시를 일치시킨다
+      focusSetDisplay();
+
       // 초기 실행
+      const restoredDraft = restoreDraft();
       updateScreen();
       desk.focus();
-      startDemo(false);
+      if (restoredDraft) stopDemo();
+      else startDemo(false);
     </script>
   </body>
 </html>
