@@ -5,7 +5,6 @@ PLATEN은 아날로그 타자기 감성을 구현한 오픈소스 글쓰기 도�
 - **개인 개발 데모:** [Focus Timer 적용 버전](https://areum-hub.github.io/platen/)
 - **원본 프로젝트:** [dandacompany/platen](https://github.com/dandacompany/platen) · [원본 운영 사이트](https://memo.dante-labs.com)
 - **구현 방식:** `index.html` 단일 파일, 별도 빌드 과정 없음
-- **원본 수업 안내:** [docs/ORIGINAL_CLASS_GUIDE.md](docs/ORIGINAL_CLASS_GUIDE.md)
 
 ## 자동 타이핑 몰입 타이머 
 
