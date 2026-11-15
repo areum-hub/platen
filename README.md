@@ -1,9 +1,8 @@
 # Platen — 종이와 잉크
 
-PLATEN은 아날로그 타자기 감성을 구현한 오픈소스 글쓰기 도구입니다. 이 저장소는 [원본 PLATEN](https://github.com/dandacompany/platen)을 fork하여, **자동 타이핑과 연동되는 Focus Timer를 기획·구현한 개인 작업 버전**입니다.
+PLATEN은 아날로그 타자기 감성을 구현한 오픈소스 글쓰기 도구입니다. 이 저장소는 원본 PLATEN을 fork하여, **자동 타이핑과 연동되는 Focus Timer를 기획·구현한 개인 작업 버전**입니다.
 
-- **개인 개발 데모:** [Focus Timer 적용 버전](https://areum-hub.github.io/platen/)
-- **원본 프로젝트:** [dandacompany/platen](https://github.com/dandacompany/platen) · [원본 운영 사이트](https://memo.dante-labs.com)
+- **실행 데모:** [Focus Timer 적용 버전](https://areum-hub.github.io/platen/)
 - **구현 방식:** `index.html` 단일 파일, 별도 빌드 과정 없음
 
 ## 자동 타이핑 몰입 타이머 
@@ -116,14 +115,6 @@ Start-Process "http://localhost:8000/index.html"
 
 PowerShell에서 `Ctrl + C`를 누르면 로컬 서버가 종료됩니다.
 
-## 링크
-
-| 구분 | 주소 |
-|---|---|
-| **실행 데모 (GitHub Pages)** | [PLATEN 자동 타이핑 몰입 타이머](https://areum-hub.github.io/platen/) |
-| **내 GitHub 저장소 (공개)** | [areum-hub/platen](https://github.com/areum-hub/platen) |
-| 원본 GitHub 저장소 (공개) | [dandacompany/platen](https://github.com/dandacompany/platen) |
-
 ## Hermes 와 함께한 작업 기록
 
 이 기능은 Hermes(개발용 프로필)와 대화하면서 만들었습니다. 무엇을 요청했고, 무엇이 문제였고, 어떻게 풀었는지 순서대로 적습니다.
@@ -221,4 +212,4 @@ README·`.gitignore`·`.env.example` 을 손보기 전에 저장소 전체에서
 
 원본 저장소의 **수업 참여 방법, PR 제출 규칙, 강사 병합 및 원본 사이트 배포 안내**는 [원본 수업 안내 문서](docs/ORIGINAL_CLASS_GUIDE.md)에서 확인할 수 있습니다. 해당 규칙과 `memo.dante-labs.com` 배포 정보는 개인 fork의 운영 지침이 아닙니다.
 
-원본 제작 및 기여: [dandacompany/platen](https://github.com/dandacompany/platen) · 코드 라이선스: [MIT License](LICENSE)
+원본 저장소: [dandacompany/platen](https://github.com/dandacompany/platen) · [원본 운영 사이트](https://memo.dante-labs.com) · 코드 라이선스: [MIT License](LICENSE)
