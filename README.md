@@ -201,4 +201,4 @@ README·`.gitignore`·`.env.example` 을 손보기 전에 저장소 전체에서
 
 국민대학교 경영대학원 「AI에이전트실무」 7주차의 **수업 참여 방법, PR 제출 규칙, 강사 병합 및 원본 사이트 배포 안내**는 [원본 수업 안내 문서](docs/ORIGINAL_CLASS_GUIDE.md)에 보존했습니다. 이 내용은 개인 fork의 개발·배포 절차와 구분됩니다.
 
-원본 저장소: [dandacompany/platen](https://github.com/dandacompany/platen) · [원본 운영 사이트](https://memo.dante-labs.com) · 코드 라이선스: [MIT License](LICENSE)
+원본 저장소: [dandacompany/platen](https://github.com/dandacompany/platen) · [원본 PLATEN 사이트](https://memo.dante-labs.com) · 코드 라이선스: [MIT License](LICENSE)
