@@ -3,7 +3,7 @@
 PLATEN은 아날로그 타자기 감성을 구현한 오픈소스 글쓰기 도구입니다. 이 저장소는 원본 PLATEN을 fork하여, **자동 타이핑과 연동되는 Focus Timer를 기획·구현한 개인 작업 버전**입니다.
 
 - **실행 데모:** [Focus Timer 적용 버전](https://areum-hub.github.io/platen/)
-- **구현 방식:** `index.html` 단일 파일, 별도 빌드 과정 없음
+- **구현 방식:** 기존 `index.html`에 Focus Timer를 추가하고 자동 타이핑 기능과 동작을 연동
 
 ## 자동 타이핑 몰입 타이머 
 
